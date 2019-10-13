@@ -10,10 +10,12 @@ reserved = {
     'function':'function',
     'if':'if',
     'else':'else',
+    'elif':'elif',
     'while':'while',
     'for':'for',
     'and':'and',
     'or':'or',
+    'call':'call',
 }
 
 # List of token names.   This is always required
@@ -24,6 +26,7 @@ tokens = [
     # data types and values
     'int',
     'double',
+    'string',
     'intValue',
     'doubleValue',
 
@@ -34,6 +37,8 @@ tokens = [
     'notEqual',
     'greaterThan',
     'lessThan',
+    'greaterOrEqual',
+    'lessOrEqual',
 
     # arithmetic operators
     'equal',
@@ -53,10 +58,12 @@ tokens = [
     'closeBracket',
     'openBrace',
     'closeBrace',
+    'not',
 
     # conditionals and cycles
     'if',
     'else',
+    'elif',
     'while',
     'for',
 
@@ -67,18 +74,19 @@ tokens = [
     # reserved names
     'main',
     'function',
+    'call',
 
-    # comment 
-    'comment'
 ]
 
-tokens = tokens + list(reserved.values())
+# tokens = tokens + list(reserved.values())
 
 # Regular expression rules for simple tokens
 t_isEqual = r'\=\='
 t_notEqual = r'\!\='
 t_greaterThan = r'\>'
 t_lessThan = r'\<'
+t_greaterOrEqual = r'\>\='
+t_lessOrEqual = r'\<\='
 t_equal = r'\='
 t_plus = r'\+'
 t_minus = r'\-'
@@ -94,6 +102,8 @@ t_openBracket = r'\['
 t_closeBracket = r'\]'
 t_openBrace = r'\{'
 t_closeBrace = r'\}'
+t_not = r'\!'
+t_string = r'\"[a-zA-Z0-9 \.\?\:\t\r\n\f()\[\]\&\!\@\#\$\%\^\-\=\+\/\,]*\"'
 
 # A string containing ignored characters (spaces and tabs)
 t_ignore  =  ' \t\n'
@@ -111,7 +121,10 @@ def t_intValue(t):
 
 def t_id(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = reserved.get(t.value,'id')    # Check for reserved words
+    if t.value in reserved:
+        t.type = reserved[ t.value ]
+    else:  
+        t.type = 'id'
     return t
 
 # Error handling rule
