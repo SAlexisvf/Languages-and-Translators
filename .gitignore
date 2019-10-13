@@ -1,5 +1,9 @@
 __pycache__/
 ply/
+ply-3.11/
+
 lex.pyc
 parsertab.py
 parsertab.pyc
+
+*.DS_Store
