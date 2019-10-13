@@ -3,7 +3,6 @@ ply/
 ply-3.11/
 
 lex.pyc
-parsertab.py
-parsertab.pyc
+parsetab.pyc
 
-*.DS_Store
+*.DS_Store__pycache__
