@@ -5,13 +5,38 @@ from common import symbols_table_structure
 # Get the token map from the lexer.  This is required.
 from lex import tokens
 
+available_variables_in_memory = 50
+quadruplet_index = 1
+available = []
 symbols_table = {}
+operands_stack = []
+operators_stack = []
+types_stack = []
+quadruplets = []
+
+def peek(list):
+    if len(list) == 0:
+        return None
+    return list[len(list) - 1]
+
+for i in range (available_variables_in_memory):
+    available.append('#' + str(i))
+
+symbols_table_index = available_variables_in_memory
 
 def p_program(p):
     '''
 	program : var func mainProgram
     '''
     print('Valid program!!!')
+    print()
+    print('Memory:')
+    for variable in symbols_table:
+        print('variable name:', symbols_table[variable].id + '     ' + 'type:', symbols_table[variable].type + '    ' + 'address:', symbols_table[variable].address)
+    print()
+    print('Quadruplets:')
+    for quadruplet in quadruplets:
+        print(quadruplet)
 	
 def p_var(p):
     '''
@@ -56,17 +81,22 @@ def p_type(p):
 
 def p_arithmeticExpression(p):
     '''
-    arithmeticExpression : value
-    | value plus arithmeticExpression
-    | value minus arithmeticExpression
-    | value multiply arithmeticExpression
-    | value divide arithmeticExpression
+    arithmeticExpression : multiplyDivide
+    | arithmeticExpression plus action_add_operator multiplyDivide action_quadruplet_arithmetic_expression
+    | arithmeticExpression minus action_add_operator multiplyDivide action_quadruplet_arithmetic_expression
+    '''
+
+def p_multiplyDivide(p):
+    '''
+    multiplyDivide : val
+    | multiplyDivide multiply action_add_operator val action_quadruplet_multiply_divide
+    | multiplyDivide divide action_add_operator val action_quadruplet_multiply_divide
+    '''
+
+def p_val(p):
+    '''
+    val : value
     | openParenthesis arithmeticExpression closeParenthesis
-    | openParenthesis arithmeticExpression closeParenthesis plus arithmeticExpression
-    | openParenthesis arithmeticExpression closeParenthesis minus arithmeticExpression
-    | openParenthesis arithmeticExpression closeParenthesis divide arithmeticExpression
-    | openParenthesis arithmeticExpression closeParenthesis multiply arithmeticExpression
-    | unaryExpression
     '''
 
 def p_unaryExpression(p):
@@ -79,9 +109,9 @@ def p_unaryExpression(p):
 
 def p_value(p):
     '''
-    value : intValue
-    | doubleValue
-    | id
+    value : intValue action_int_value
+    | doubleValue action_double_value
+    | id action_var_value
     '''
 
 def p_func(p):
@@ -102,7 +132,7 @@ def p_subroutine(p):
     | if openParenthesis statement closeParenthesis openBrace subroutine closeBrace elseStatement subroutine
     | while openParenthesis statement closeParenthesis openBrace subroutine closeBrace subroutine
     | for openParenthesis varSequence semicolon statement semicolon arithmeticExpression closeParenthesis openBrace subroutine closeBrace subroutine
-    | id equal arithmeticExpression semicolon subroutine
+    | id equal arithmeticExpression action_generate_quadruplet semicolon subroutine
     | unaryExpression semicolon subroutine
     | call id openParenthesis closeParenthesis semicolon subroutine
     |
@@ -144,8 +174,62 @@ def p_error(p):
     print("Syntax error in input!")
 
 def add_symbol(name, data_type):
-    symbols_table[name] = symbols_table_structure(name, data_type)
-    
+    global symbols_table_index
+    symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index))
+    symbols_table_index += 1
+
+def p_action_var_value(p):
+    "action_var_value :"
+    operands_stack.append(symbols_table[p[-1]].address)
+    types_stack.append(symbols_table[p[-1]].type)
+
+def p_action_int_value(p):
+    "action_int_value :"
+    operands_stack.append(p[-1])
+    types_stack.append('int')
+
+def p_action_double_value(p):
+    "action_double_value :"
+    operands_stack.append(p[-1])
+    types_stack.append('double')
+
+def p_action_add_operator(p):
+    "action_add_operator :"
+    operators_stack.append(p[-1])
+
+def p_action_generate_quadruplet(p):
+    "action_generate_quadruplet :"
+    operator = p[-2]
+    operand = p[-3]
+    # variable_type = symbols_table[operand].type
+    variable_address = symbols_table[operand].address
+    value = operands_stack.pop()
+    quadruplets.append(str(operator) + ' ' + str(value) + ' ' + str(variable_address))
+
+def add_quadruplet():
+    global quadruplet_index
+    operator = operators_stack.pop()
+    right_operand = operands_stack.pop()
+    # right_operandType = typesStack.pop()
+    left_operand = operands_stack.pop()
+    # left_operandType = typesStack.pop()
+    # typesStack.append(validType(operator, left_operandType, right_operandType))
+    temp = available.pop(0)
+    quadruplets.append(str(operator) + ' ' + str(left_operand) + ' ' + str(right_operand) + ' ' + str(temp))
+    quadruplet_index += 1
+    operands_stack.append(temp)
+
+def p_action_quadruplet_arithmetic_expression(p):
+    "action_quadruplet_arithmetic_expression :"
+    operator = peek(operators_stack) 
+    if operator == "+" or operator == "-":
+        add_quadruplet()
+
+def p_action_quadruplet_multiply_divide(p):
+    "action_quadruplet_multiply_divide :"
+    operator = peek(operators_stack) 
+    if operator == "*" or operator == "/":
+        add_quadruplet()    
 
 # Build the parser
 parser = yacc.yacc()

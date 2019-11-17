@@ -109,11 +109,6 @@ t_string = r'\"[a-zA-Z0-9 \.\?\:\t\r\n\f()\[\]\&\!\@\#\$\%\^\-\=\+\/\,]*\"'
 t_ignore  =  ' \t\n'
 t_ignore_COMMENT = r'\#.*'
 
-precedence = (
-     ('left', 'PLUS', 'MINUS'),
-     ('left', 'TIMES', 'DIVIDE'),
-)
-
 def t_doubleValue(t):
     r'\d+\.\d+'
     t.value = float(t.value)
