@@ -12,6 +12,8 @@ symbols_table = {}
 operands_stack = []
 operators_stack = []
 types_stack = []
+jumps_stack = []
+ifs_stack = []
 quadruplets = []
 
 def peek(list):
@@ -35,8 +37,8 @@ def p_program(p):
         print('variable name:', symbols_table[variable].id + '     ' + 'type:', symbols_table[variable].type + '    ' + 'address:', symbols_table[variable].address)
     print()
     print('Quadruplets:')
-    for quadruplet in quadruplets:
-        print(quadruplet)
+    for i in range (len(quadruplets)):
+        print(str(i+1) + ') ' + quadruplets[i])
 	
 def p_var(p):
     '''
@@ -82,20 +84,21 @@ def p_type(p):
 def p_arithmeticExpression(p):
     '''
     arithmeticExpression : multiplyDivide
-    | arithmeticExpression plus action_add_operator multiplyDivide action_quadruplet_arithmetic_expression
-    | arithmeticExpression minus action_add_operator multiplyDivide action_quadruplet_arithmetic_expression
+    | arithmeticExpression plus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
+    | arithmeticExpression minus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
     '''
 
 def p_multiplyDivide(p):
     '''
     multiplyDivide : val
-    | multiplyDivide multiply action_add_operator val action_quadruplet_multiply_divide
-    | multiplyDivide divide action_add_operator val action_quadruplet_multiply_divide
+    | multiplyDivide multiply ACTION_ADD_OPERATOR val ACTION_ADD_QUADRUPLET
+    | multiplyDivide divide ACTION_ADD_OPERATOR val ACTION_ADD_QUADRUPLET
     '''
 
 def p_val(p):
     '''
     val : value
+    | unaryExpression
     | openParenthesis arithmeticExpression closeParenthesis
     '''
 
@@ -109,9 +112,9 @@ def p_unaryExpression(p):
 
 def p_value(p):
     '''
-    value : intValue action_int_value
-    | doubleValue action_double_value
-    | id action_var_value
+    value : intValue ACTION_INT_VALUE
+    | doubleValue ACTION_DOUBLE_VALUE
+    | id ACTION_VAR_VALUE
     '''
 
 def p_func(p):
@@ -129,25 +132,25 @@ def p_subroutine(p):
     '''
     subroutine : consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
     | consoleRead openParenthesis id closeParenthesis semicolon subroutine
-    | if openParenthesis statement closeParenthesis openBrace subroutine closeBrace elseStatement subroutine
+    | if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     | while openParenthesis statement closeParenthesis openBrace subroutine closeBrace subroutine
     | for openParenthesis varSequence semicolon statement semicolon arithmeticExpression closeParenthesis openBrace subroutine closeBrace subroutine
-    | id equal arithmeticExpression action_generate_quadruplet semicolon subroutine
+    | id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     | unaryExpression semicolon subroutine
     | call id openParenthesis closeParenthesis semicolon subroutine
     |
     '''
 def p_elseStatement(p):
     '''
-    elseStatement : elif openParenthesis statement closeParenthesis openBrace subroutine closeBrace elseStatement
-    | else openBrace subroutine closeBrace
-    |
+    elseStatement : elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
+    | else ACTION_FILL_JUMP openBrace subroutine closeBrace
+    | ACTION_FILL_JUMP
     '''
 
 def p_statement(p):
     '''
-    statement : arithmeticExpression
-    | arithmeticExpression logicExpression arithmeticExpression
+    statement : arithmeticExpression 
+    | arithmeticExpression logicExpression ACTION_ADD_OPERATOR arithmeticExpression ACTION_ADD_QUADRUPLET
     | statement logicExpression statement
     '''
 
@@ -162,6 +165,7 @@ def p_logicExpression(p):
     | and
     | or
     '''
+    p[0] = p[1]
 
 def p_cout(p):
     '''
@@ -171,7 +175,7 @@ def p_cout(p):
 
 # Error rule for syntax errors
 def p_error(p):
-    print("Syntax error in input!")
+    raise Exception("Syntax error in input!")
 
 def add_symbol(name, data_type):
     global symbols_table_index
@@ -179,57 +183,77 @@ def add_symbol(name, data_type):
     symbols_table_index += 1
 
 def p_action_var_value(p):
-    "action_var_value :"
+    "ACTION_VAR_VALUE :"
     operands_stack.append(symbols_table[p[-1]].address)
     types_stack.append(symbols_table[p[-1]].type)
 
 def p_action_int_value(p):
-    "action_int_value :"
+    "ACTION_INT_VALUE :"
     operands_stack.append(p[-1])
     types_stack.append('int')
 
 def p_action_double_value(p):
-    "action_double_value :"
+    "ACTION_DOUBLE_VALUE :"
     operands_stack.append(p[-1])
     types_stack.append('double')
 
 def p_action_add_operator(p):
-    "action_add_operator :"
+    "ACTION_ADD_OPERATOR :"
     operators_stack.append(p[-1])
 
 def p_action_generate_quadruplet(p):
-    "action_generate_quadruplet :"
+    "ACTION_GENERATE_QUADRUPLET :"
+    global quadruplet_index
     operator = p[-2]
     operand = p[-3]
-    # variable_type = symbols_table[operand].type
     variable_address = symbols_table[operand].address
     value = operands_stack.pop()
     quadruplets.append(str(operator) + ' ' + str(value) + ' ' + str(variable_address))
+    quadruplet_index += 1
 
-def add_quadruplet():
+def p_action_add_quadruplet(p):
+    "ACTION_ADD_QUADRUPLET :" 
     global quadruplet_index
+    global available
     operator = operators_stack.pop()
     right_operand = operands_stack.pop()
-    # right_operandType = typesStack.pop()
     left_operand = operands_stack.pop()
-    # left_operandType = typesStack.pop()
-    # typesStack.append(validType(operator, left_operandType, right_operandType))
     temp = available.pop(0)
     quadruplets.append(str(operator) + ' ' + str(left_operand) + ' ' + str(right_operand) + ' ' + str(temp))
     quadruplet_index += 1
     operands_stack.append(temp)
 
-def p_action_quadruplet_arithmetic_expression(p):
-    "action_quadruplet_arithmetic_expression :"
-    operator = peek(operators_stack) 
-    if operator == "+" or operator == "-":
-        add_quadruplet()
+def p_action_quadruplet_empty_jump(p):
+    "ACTION_QUADRUPLET_EMPTY_JUMP :"
+    global quadruplet_index
+    statement_result = quadruplets[quadruplet_index - 2].split()
+    quadruplets.append(str("gotoF") + ' ' + str(statement_result[len(statement_result) - 1]) + ' ')
+    jumps_stack.append(quadruplet_index)
+    quadruplet_index += 1
 
-def p_action_quadruplet_multiply_divide(p):
-    "action_quadruplet_multiply_divide :"
-    operator = peek(operators_stack) 
-    if operator == "*" or operator == "/":
-        add_quadruplet()    
+def p_action_new_if(p):
+    "ACTION_NEW_IF :"
+    ifs_stack.append([])
+
+def p_action_quadruplet_empty_jump_end_if(p):
+    "ACTION_QUADRUPLET_EMPTY_JUMP_END_IF :"
+    global quadruplet_index
+    ifs_stack[len(ifs_stack) - 1].append(quadruplet_index)
+    quadruplets.append(str("goto") + ' ')
+    quadruplet_index += 1
+
+def p_ACTION_FILL_JUMP_end_if(p):
+    "ACTION_FILL_JUMP_END_IF :"
+    for goto_index in ifs_stack[len(ifs_stack) - 1]:
+        fill_jump(goto_index - 1, quadruplet_index)
+    ifs_stack.pop()
+
+def p_action_fill_jump(p):
+    "ACTION_FILL_JUMP :"
+    fill_jump(jumps_stack.pop() - 1, quadruplet_index)
+
+def fill_jump(empty_jump_quadruplet_index, goto_index):
+    quadruplets[empty_jump_quadruplet_index] = quadruplets[empty_jump_quadruplet_index] + str(goto_index)
 
 # Build the parser
 parser = yacc.yacc()
