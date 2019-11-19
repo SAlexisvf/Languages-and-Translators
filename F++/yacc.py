@@ -15,6 +15,7 @@ types_stack = []
 jumps_stack = []
 ifs_stack = []
 quadruplets = []
+for_increment = []
 
 def peek(list):
     if len(list) == 0:
@@ -117,7 +118,7 @@ def p_value(p):
 
 def p_func(p):
     '''
-    func : function id openParenthesis closeParenthesis openBrace subroutine closeBrace func
+    func : function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func
     |
     '''
 
@@ -128,15 +129,15 @@ def p_mainProgram(p):
 
 def p_subroutine(p):
     '''
-    subroutine : consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    | consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    subroutine : consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    | consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     | if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     | while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     | do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    | for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    | for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     | id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     | unaryExpression semicolon subroutine
-    | call id openParenthesis closeParenthesis semicolon subroutine
+    | call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     |
     '''
 def p_elseStatement(p):
@@ -171,14 +172,15 @@ def p_cout(p):
     cout : arithmeticExpression
     | string
     '''
+    p[0] = p[1]
 
 # Error rule for syntax errors
 def p_error(p):
     raise Exception("Syntax error in input!")
 
-def add_symbol(name, data_type):
+def add_symbol(name, data_type, index=0):
     global symbols_table_index
-    symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index))
+    symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index), index)
     symbols_table_index += 1
 
 def p_action_var_value(p):
@@ -232,8 +234,7 @@ def p_action_generate_quadruplet(p):
 
 def p_action_add_quadruplet(p):
     "ACTION_ADD_QUADRUPLET :" 
-    global quadruplet_index
-    global available
+    global quadruplet_index, available
     operator = operators_stack.pop()
     right_operand = operands_stack.pop()
     left_operand = operands_stack.pop()
@@ -290,6 +291,57 @@ def p_action_quadruplet_empty_jump_do_while(p):
     statement_result = quadruplets[quadruplet_index - 2].split()
     quadruplets.append(str("gotoT") + ' ' + str(statement_result[len(statement_result) - 1]) + ' ' + str(jumps_stack.pop()))
     quadruplet_index += 1
+
+def p_action_for_increment(p):
+    "ACTION_FOR_INCREMENT :"
+    global quadruplet_index, for_increment
+    for_increment.append(quadruplets[quadruplet_index-2])
+    quadruplets.pop()
+    quadruplet_index -= 1
+
+def p_action_for_goto(p):
+    "ACTION_FOR_GOTO :"
+    global quadruplet_index, for_increment
+    empty_jump_quadruplet_index = jumps_stack.pop() - 1
+    quadruplets.append(for_increment.pop())
+    quadruplet_index += 1
+    quadruplets.append(str("goto ") + str(empty_jump_quadruplet_index))
+    quadruplet_index += 1
+    fill_jump(empty_jump_quadruplet_index, quadruplet_index)
+
+def p_action_add_function(p):
+    "ACTION_ADD_FUNCTION :"
+    global quadruplet_index
+    function_id = p[-1]
+    add_symbol(function_id, 'function', quadruplet_index)
+
+def p_action_end_function(p):
+    "ACTION_END_FUNCTION :"
+    global quadruplet_index
+    quadruplets.append('return')
+    quadruplet_index += 1
+
+def p_action_goto_function(p):
+    "ACTION_GOTO_FUNCTION :"
+    global quadruplet_index
+    function_id = p[-1]
+    quadruplets.append('goto ' + str(symbols_table[function_id].index))
+    quadruplet_index += 1
+
+def p_action_console_write(p):
+    "ACTION_CONSOLE_WRITE :"
+    global quadruplet_index
+    cout = p[-1]
+    quadruplets.append('consoleWrite ' + str(cout))
+    quadruplet_index += 1
+
+def p_action_console_read(p):
+    "ACTION_CONSOLE_READ :"
+    global quadruplet_index
+    cin = p[-1]
+    quadruplets.append('consoleRead ' + str(cin))
+    quadruplet_index += 1
+
 
 def fill_jump(empty_jump_quadruplet_index, goto_index):
     quadruplets[empty_jump_quadruplet_index] = quadruplets[empty_jump_quadruplet_index] + str(goto_index)

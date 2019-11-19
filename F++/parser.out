@@ -34,18 +34,18 @@ Rule 24    unaryExpression -> id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNA
 Rule 25    value -> intValue ACTION_INT_VALUE
 Rule 26    value -> doubleValue ACTION_DOUBLE_VALUE
 Rule 27    value -> id ACTION_VAR_VALUE
-Rule 28    func -> function id openParenthesis closeParenthesis openBrace subroutine closeBrace func
+Rule 28    func -> function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func
 Rule 29    func -> <empty>
 Rule 30    mainProgram -> main openParenthesis closeParenthesis openBrace subroutine closeBrace
-Rule 31    subroutine -> consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-Rule 32    subroutine -> consoleRead openParenthesis id closeParenthesis semicolon subroutine
+Rule 31    subroutine -> consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+Rule 32    subroutine -> consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
 Rule 33    subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
 Rule 34    subroutine -> while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
 Rule 35    subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-Rule 36    subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+Rule 36    subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
 Rule 37    subroutine -> id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
 Rule 38    subroutine -> unaryExpression semicolon subroutine
-Rule 39    subroutine -> call id openParenthesis closeParenthesis semicolon subroutine
+Rule 39    subroutine -> call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
 Rule 40    subroutine -> <empty>
 Rule 41    elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
 Rule 42    elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace
@@ -80,6 +80,13 @@ Rule 70    ACTION_FILL_JUMP -> <empty>
 Rule 71    ACTION_WHILE_GOTO -> <empty>
 Rule 72    ACTION_DO_WHILE_INDEX -> <empty>
 Rule 73    ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE -> <empty>
+Rule 74    ACTION_FOR_INCREMENT -> <empty>
+Rule 75    ACTION_FOR_GOTO -> <empty>
+Rule 76    ACTION_ADD_FUNCTION -> <empty>
+Rule 77    ACTION_END_FUNCTION -> <empty>
+Rule 78    ACTION_GOTO_FUNCTION -> <empty>
+Rule 79    ACTION_CONSOLE_WRITE -> <empty>
+Rule 80    ACTION_CONSOLE_READ -> <empty>
 
 Terminals, with rules where they appear
 
@@ -128,13 +135,20 @@ while                : 34 35
 
 Nonterminals, with rules where they appear
 
+ACTION_ADD_FUNCTION  : 28
 ACTION_ADD_OPERATOR  : 15 16 18 19 45 46
 ACTION_ADD_QUADRUPLET : 15 16 18 19 45 46
+ACTION_CONSOLE_READ  : 32
+ACTION_CONSOLE_WRITE : 31
 ACTION_DOUBLE_VALUE  : 26
 ACTION_DO_WHILE_INDEX : 35
+ACTION_END_FUNCTION  : 28
 ACTION_FILL_JUMP     : 41 42 43
 ACTION_FILL_JUMP_END_IF : 33
+ACTION_FOR_GOTO      : 36
+ACTION_FOR_INCREMENT : 36
 ACTION_GENERATE_QUADRUPLET : 36 37
+ACTION_GOTO_FUNCTION : 39
 ACTION_INT_VALUE     : 25
 ACTION_NEW_IF        : 33
 ACTION_QUADRUPLET_EMPTY_JUMP : 33 34 36 41
@@ -144,7 +158,7 @@ ACTION_UNARY_ADD_OPERANDS : 23 24
 ACTION_UNARY_MINUS   : 24
 ACTION_UNARY_PLUS    : 23
 ACTION_VAR_VALUE     : 27
-ACTION_WHILE_GOTO    : 34 36
+ACTION_WHILE_GOTO    : 34
 arithmeticExpression : 4 6 15 16 22 36 36 37 44 45 45 55
 cout                 : 31
 dimentions           : 8
@@ -193,7 +207,7 @@ state 1
 state 2
 
     (1) program -> var . func mainProgram
-    (28) func -> . function id openParenthesis closeParenthesis openBrace subroutine closeBrace func
+    (28) func -> . function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func
     (29) func -> .
 
     function        shift and go to state 7
@@ -240,7 +254,7 @@ state 6
 
 state 7
 
-    (28) func -> function . id openParenthesis closeParenthesis openBrace subroutine closeBrace func
+    (28) func -> function . id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func
 
     id              shift and go to state 13
 
@@ -294,10 +308,12 @@ state 12
 
 state 13
 
-    (28) func -> function id . openParenthesis closeParenthesis openBrace subroutine closeBrace func
+    (28) func -> function id . ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func
+    (76) ACTION_ADD_FUNCTION -> .
 
-    openParenthesis shift and go to state 20
+    openParenthesis reduce using rule 76 (ACTION_ADD_FUNCTION -> .)
 
+    ACTION_ADD_FUNCTION            shift and go to state 20
 
 state 14
 
@@ -391,9 +407,9 @@ state 19
 
 state 20
 
-    (28) func -> function id openParenthesis . closeParenthesis openBrace subroutine closeBrace func
+    (28) func -> function id ACTION_ADD_FUNCTION . openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func
 
-    closeParenthesis shift and go to state 35
+    openParenthesis shift and go to state 35
 
 
 state 21
@@ -642,9 +658,9 @@ state 34
 
 state 35
 
-    (28) func -> function id openParenthesis closeParenthesis . openBrace subroutine closeBrace func
+    (28) func -> function id ACTION_ADD_FUNCTION openParenthesis . closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func
 
-    openBrace       shift and go to state 48
+    closeParenthesis shift and go to state 48
 
 
 state 36
@@ -809,15 +825,15 @@ state 46
 state 47
 
     (30) mainProgram -> main openParenthesis closeParenthesis openBrace . subroutine closeBrace
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -837,32 +853,10 @@ state 47
 
 state 48
 
-    (28) func -> function id openParenthesis closeParenthesis openBrace . subroutine closeBrace func
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
-    (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
-    (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
-    (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
-    (40) subroutine -> .
-    (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
-    (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
+    (28) func -> function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis . openBrace subroutine closeBrace ACTION_END_FUNCTION func
 
-    consoleWrite    shift and go to state 59
-    consoleRead     shift and go to state 60
-    if              shift and go to state 62
-    while           shift and go to state 63
-    do              shift and go to state 64
-    for             shift and go to state 65
-    id              shift and go to state 61
-    call            shift and go to state 67
-    closeBrace      reduce using rule 40 (subroutine -> .)
+    openBrace       shift and go to state 68
 
-    subroutine                     shift and go to state 68
-    unaryExpression                shift and go to state 66
 
 state 49
 
@@ -1052,14 +1046,14 @@ state 58
 
 state 59
 
-    (31) subroutine -> consoleWrite . openParenthesis cout closeParenthesis semicolon subroutine
+    (31) subroutine -> consoleWrite . openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
 
     openParenthesis shift and go to state 77
 
 
 state 60
 
-    (32) subroutine -> consoleRead . openParenthesis id closeParenthesis semicolon subroutine
+    (32) subroutine -> consoleRead . openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
 
     openParenthesis shift and go to state 78
 
@@ -1102,7 +1096,7 @@ state 64
 
 state 65
 
-    (36) subroutine -> for . openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> for . openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
 
     openParenthesis shift and go to state 83
 
@@ -1116,17 +1110,39 @@ state 66
 
 state 67
 
-    (39) subroutine -> call . id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> call . id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
 
     id              shift and go to state 85
 
 
 state 68
 
-    (28) func -> function id openParenthesis closeParenthesis openBrace subroutine . closeBrace func
+    (28) func -> function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace . subroutine closeBrace ACTION_END_FUNCTION func
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
+    (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
+    (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
+    (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
+    (38) subroutine -> . unaryExpression semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
+    (40) subroutine -> .
+    (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
+    (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
 
-    closeBrace      shift and go to state 86
+    consoleWrite    shift and go to state 59
+    consoleRead     shift and go to state 60
+    if              shift and go to state 62
+    while           shift and go to state 63
+    do              shift and go to state 64
+    for             shift and go to state 65
+    id              shift and go to state 61
+    call            shift and go to state 67
+    closeBrace      reduce using rule 40 (subroutine -> .)
 
+    subroutine                     shift and go to state 86
+    unaryExpression                shift and go to state 66
 
 state 69
 
@@ -1282,7 +1298,7 @@ state 76
 
 state 77
 
-    (31) subroutine -> consoleWrite openParenthesis . cout closeParenthesis semicolon subroutine
+    (31) subroutine -> consoleWrite openParenthesis . cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
     (55) cout -> . arithmeticExpression
     (56) cout -> . string
     (14) arithmeticExpression -> . multiplyDivide
@@ -1315,7 +1331,7 @@ state 77
 
 state 78
 
-    (32) subroutine -> consoleRead openParenthesis . id closeParenthesis semicolon subroutine
+    (32) subroutine -> consoleRead openParenthesis . id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
 
     id              shift and go to state 95
 
@@ -1424,7 +1440,7 @@ state 82
 
 state 83
 
-    (36) subroutine -> for openParenthesis . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> for openParenthesis . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
 
     id              shift and go to state 101
 
@@ -1432,15 +1448,15 @@ state 83
 state 84
 
     (38) subroutine -> unaryExpression semicolon . subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -1460,21 +1476,19 @@ state 84
 
 state 85
 
-    (39) subroutine -> call id . openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> call id . ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
+    (78) ACTION_GOTO_FUNCTION -> .
 
-    openParenthesis shift and go to state 103
+    openParenthesis reduce using rule 78 (ACTION_GOTO_FUNCTION -> .)
 
+    ACTION_GOTO_FUNCTION           shift and go to state 103
 
 state 86
 
-    (28) func -> function id openParenthesis closeParenthesis openBrace subroutine closeBrace . func
-    (28) func -> . function id openParenthesis closeParenthesis openBrace subroutine closeBrace func
-    (29) func -> .
+    (28) func -> function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine . closeBrace ACTION_END_FUNCTION func
 
-    function        shift and go to state 7
-    main            reduce using rule 29 (func -> .)
+    closeBrace      shift and go to state 104
 
-    func                           shift and go to state 104
 
 state 87
 
@@ -1567,10 +1581,12 @@ state 91
 
 state 92
 
-    (31) subroutine -> consoleWrite openParenthesis cout . closeParenthesis semicolon subroutine
+    (31) subroutine -> consoleWrite openParenthesis cout . ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (79) ACTION_CONSOLE_WRITE -> .
 
-    closeParenthesis shift and go to state 105
+    closeParenthesis reduce using rule 79 (ACTION_CONSOLE_WRITE -> .)
 
+    ACTION_CONSOLE_WRITE           shift and go to state 105
 
 state 93
 
@@ -1592,10 +1608,12 @@ state 94
 
 state 95
 
-    (32) subroutine -> consoleRead openParenthesis id . closeParenthesis semicolon subroutine
+    (32) subroutine -> consoleRead openParenthesis id . ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
+    (80) ACTION_CONSOLE_READ -> .
 
-    closeParenthesis shift and go to state 106
+    closeParenthesis reduce using rule 80 (ACTION_CONSOLE_READ -> .)
 
+    ACTION_CONSOLE_READ            shift and go to state 106
 
 state 96
 
@@ -1710,15 +1728,15 @@ state 99
 state 100
 
     (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace . subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -1738,7 +1756,7 @@ state 100
 
 state 101
 
-    (36) subroutine -> for openParenthesis id . equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> for openParenthesis id . equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
 
     equal           shift and go to state 121
 
@@ -1752,37 +1770,40 @@ state 102
 
 state 103
 
-    (39) subroutine -> call id openParenthesis . closeParenthesis semicolon subroutine
+    (39) subroutine -> call id ACTION_GOTO_FUNCTION . openParenthesis closeParenthesis semicolon subroutine
 
-    closeParenthesis shift and go to state 122
+    openParenthesis shift and go to state 122
 
 
 state 104
 
-    (28) func -> function id openParenthesis closeParenthesis openBrace subroutine closeBrace func .
+    (28) func -> function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace . ACTION_END_FUNCTION func
+    (77) ACTION_END_FUNCTION -> .
 
-    main            reduce using rule 28 (func -> function id openParenthesis closeParenthesis openBrace subroutine closeBrace func .)
+    function        reduce using rule 77 (ACTION_END_FUNCTION -> .)
+    main            reduce using rule 77 (ACTION_END_FUNCTION -> .)
 
+    ACTION_END_FUNCTION            shift and go to state 123
 
 state 105
 
-    (31) subroutine -> consoleWrite openParenthesis cout closeParenthesis . semicolon subroutine
+    (31) subroutine -> consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE . closeParenthesis semicolon subroutine
 
-    semicolon       shift and go to state 123
+    closeParenthesis shift and go to state 124
 
 
 state 106
 
-    (32) subroutine -> consoleRead openParenthesis id closeParenthesis . semicolon subroutine
+    (32) subroutine -> consoleRead openParenthesis id ACTION_CONSOLE_READ . closeParenthesis semicolon subroutine
 
-    semicolon       shift and go to state 124
+    closeParenthesis shift and go to state 125
 
 
 state 107
 
     (37) subroutine -> id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET . semicolon subroutine
 
-    semicolon       shift and go to state 125
+    semicolon       shift and go to state 126
 
 
 state 108
@@ -1792,7 +1813,7 @@ state 108
 
     openBrace       reduce using rule 66 (ACTION_QUADRUPLET_EMPTY_JUMP -> .)
 
-    ACTION_QUADRUPLET_EMPTY_JUMP   shift and go to state 126
+    ACTION_QUADRUPLET_EMPTY_JUMP   shift and go to state 127
 
 state 109
 
@@ -1804,7 +1825,7 @@ state 109
     doubleValue     reduce using rule 63 (ACTION_ADD_OPERATOR -> .)
     id              reduce using rule 63 (ACTION_ADD_OPERATOR -> .)
 
-    ACTION_ADD_OPERATOR            shift and go to state 127
+    ACTION_ADD_OPERATOR            shift and go to state 128
 
 state 110
 
@@ -1896,7 +1917,7 @@ state 118
     doubleValue     reduce using rule 63 (ACTION_ADD_OPERATOR -> .)
     id              reduce using rule 63 (ACTION_ADD_OPERATOR -> .)
 
-    ACTION_ADD_OPERATOR            shift and go to state 128
+    ACTION_ADD_OPERATOR            shift and go to state 129
 
 state 119
 
@@ -1905,18 +1926,18 @@ state 119
 
     openBrace       reduce using rule 66 (ACTION_QUADRUPLET_EMPTY_JUMP -> .)
 
-    ACTION_QUADRUPLET_EMPTY_JUMP   shift and go to state 129
+    ACTION_QUADRUPLET_EMPTY_JUMP   shift and go to state 130
 
 state 120
 
     (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine . closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
 
-    closeBrace      shift and go to state 130
+    closeBrace      shift and go to state 131
 
 
 state 121
 
-    (36) subroutine -> for openParenthesis id equal . arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> for openParenthesis id equal . arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (14) arithmeticExpression -> . multiplyDivide
     (15) arithmeticExpression -> . arithmeticExpression plus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
     (16) arithmeticExpression -> . arithmeticExpression minus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
@@ -1937,7 +1958,7 @@ state 121
     doubleValue     shift and go to state 29
     id              shift and go to state 30
 
-    arithmeticExpression           shift and go to state 131
+    arithmeticExpression           shift and go to state 132
     multiplyDivide                 shift and go to state 23
     val                            shift and go to state 24
     value                          shift and go to state 25
@@ -1945,81 +1966,48 @@ state 121
 
 state 122
 
-    (39) subroutine -> call id openParenthesis closeParenthesis . semicolon subroutine
+    (39) subroutine -> call id ACTION_GOTO_FUNCTION openParenthesis . closeParenthesis semicolon subroutine
 
-    semicolon       shift and go to state 132
+    closeParenthesis shift and go to state 133
 
 
 state 123
 
-    (31) subroutine -> consoleWrite openParenthesis cout closeParenthesis semicolon . subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
-    (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
-    (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
-    (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
-    (40) subroutine -> .
-    (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
-    (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
+    (28) func -> function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION . func
+    (28) func -> . function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func
+    (29) func -> .
 
-    consoleWrite    shift and go to state 59
-    consoleRead     shift and go to state 60
-    if              shift and go to state 62
-    while           shift and go to state 63
-    do              shift and go to state 64
-    for             shift and go to state 65
-    id              shift and go to state 61
-    call            shift and go to state 67
-    closeBrace      reduce using rule 40 (subroutine -> .)
+    function        shift and go to state 7
+    main            reduce using rule 29 (func -> .)
 
-    subroutine                     shift and go to state 133
-    unaryExpression                shift and go to state 66
+    func                           shift and go to state 134
 
 state 124
 
-    (32) subroutine -> consoleRead openParenthesis id closeParenthesis semicolon . subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
-    (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
-    (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
-    (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
-    (40) subroutine -> .
-    (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
-    (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
+    (31) subroutine -> consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis . semicolon subroutine
 
-    consoleWrite    shift and go to state 59
-    consoleRead     shift and go to state 60
-    if              shift and go to state 62
-    while           shift and go to state 63
-    do              shift and go to state 64
-    for             shift and go to state 65
-    id              shift and go to state 61
-    call            shift and go to state 67
-    closeBrace      reduce using rule 40 (subroutine -> .)
+    semicolon       shift and go to state 135
 
-    subroutine                     shift and go to state 134
-    unaryExpression                shift and go to state 66
 
 state 125
 
+    (32) subroutine -> consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis . semicolon subroutine
+
+    semicolon       shift and go to state 136
+
+
+state 126
+
     (37) subroutine -> id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon . subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -2034,17 +2022,17 @@ state 125
     call            shift and go to state 67
     closeBrace      reduce using rule 40 (subroutine -> .)
 
-    subroutine                     shift and go to state 135
+    subroutine                     shift and go to state 137
     unaryExpression                shift and go to state 66
 
-state 126
+state 127
 
     (33) subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP . openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
 
-    openBrace       shift and go to state 136
+    openBrace       shift and go to state 138
 
 
-state 127
+state 128
 
     (46) statement -> statement logicExpression ACTION_ADD_OPERATOR . statement ACTION_ADD_QUADRUPLET
     (44) statement -> . arithmeticExpression
@@ -2070,14 +2058,14 @@ state 127
     doubleValue     shift and go to state 29
     id              shift and go to state 30
 
-    statement                      shift and go to state 137
+    statement                      shift and go to state 139
     arithmeticExpression           shift and go to state 98
     multiplyDivide                 shift and go to state 23
     val                            shift and go to state 24
     value                          shift and go to state 25
     unaryExpression                shift and go to state 26
 
-state 128
+state 129
 
     (45) statement -> arithmeticExpression logicExpression ACTION_ADD_OPERATOR . arithmeticExpression ACTION_ADD_QUADRUPLET
     (14) arithmeticExpression -> . multiplyDivide
@@ -2100,29 +2088,29 @@ state 128
     doubleValue     shift and go to state 29
     id              shift and go to state 30
 
-    arithmeticExpression           shift and go to state 138
+    arithmeticExpression           shift and go to state 140
     multiplyDivide                 shift and go to state 23
     val                            shift and go to state 24
     value                          shift and go to state 25
     unaryExpression                shift and go to state 26
 
-state 129
+state 130
 
     (34) subroutine -> while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP . openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
 
-    openBrace       shift and go to state 139
-
-
-state 130
-
-    (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-
-    while           shift and go to state 140
+    openBrace       shift and go to state 141
 
 
 state 131
 
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression . ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
+
+    while           shift and go to state 142
+
+
+state 132
+
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression . ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (15) arithmeticExpression -> arithmeticExpression . plus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
     (16) arithmeticExpression -> arithmeticExpression . minus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
     (64) ACTION_GENERATE_QUADRUPLET -> .
@@ -2131,20 +2119,34 @@ state 131
     minus           shift and go to state 38
     semicolon       reduce using rule 64 (ACTION_GENERATE_QUADRUPLET -> .)
 
-    ACTION_GENERATE_QUADRUPLET     shift and go to state 141
+    ACTION_GENERATE_QUADRUPLET     shift and go to state 143
 
-state 132
+state 133
 
-    (39) subroutine -> call id openParenthesis closeParenthesis semicolon . subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (39) subroutine -> call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis . semicolon subroutine
+
+    semicolon       shift and go to state 144
+
+
+state 134
+
+    (28) func -> function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func .
+
+    main            reduce using rule 28 (func -> function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func .)
+
+
+state 135
+
+    (31) subroutine -> consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon . subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -2159,42 +2161,57 @@ state 132
     call            shift and go to state 67
     closeBrace      reduce using rule 40 (subroutine -> .)
 
-    subroutine                     shift and go to state 142
+    subroutine                     shift and go to state 145
     unaryExpression                shift and go to state 66
 
-state 133
+state 136
 
-    (31) subroutine -> consoleWrite openParenthesis cout closeParenthesis semicolon subroutine .
+    (32) subroutine -> consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon . subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
+    (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
+    (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
+    (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
+    (38) subroutine -> . unaryExpression semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
+    (40) subroutine -> .
+    (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
+    (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
 
-    closeBrace      reduce using rule 31 (subroutine -> consoleWrite openParenthesis cout closeParenthesis semicolon subroutine .)
+    consoleWrite    shift and go to state 59
+    consoleRead     shift and go to state 60
+    if              shift and go to state 62
+    while           shift and go to state 63
+    do              shift and go to state 64
+    for             shift and go to state 65
+    id              shift and go to state 61
+    call            shift and go to state 67
+    closeBrace      reduce using rule 40 (subroutine -> .)
 
+    subroutine                     shift and go to state 146
+    unaryExpression                shift and go to state 66
 
-state 134
-
-    (32) subroutine -> consoleRead openParenthesis id closeParenthesis semicolon subroutine .
-
-    closeBrace      reduce using rule 32 (subroutine -> consoleRead openParenthesis id closeParenthesis semicolon subroutine .)
-
-
-state 135
+state 137
 
     (37) subroutine -> id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine .
 
     closeBrace      reduce using rule 37 (subroutine -> id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine .)
 
 
-state 136
+state 138
 
     (33) subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace . subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -2209,10 +2226,10 @@ state 136
     call            shift and go to state 67
     closeBrace      reduce using rule 40 (subroutine -> .)
 
-    subroutine                     shift and go to state 143
+    subroutine                     shift and go to state 147
     unaryExpression                shift and go to state 66
 
-state 137
+state 139
 
     (46) statement -> statement logicExpression ACTION_ADD_OPERATOR statement . ACTION_ADD_QUADRUPLET
     (46) statement -> statement . logicExpression ACTION_ADD_OPERATOR statement ACTION_ADD_QUADRUPLET
@@ -2255,9 +2272,9 @@ state 137
   ! or              [ reduce using rule 65 (ACTION_ADD_QUADRUPLET -> .) ]
 
     logicExpression                shift and go to state 109
-    ACTION_ADD_QUADRUPLET          shift and go to state 144
+    ACTION_ADD_QUADRUPLET          shift and go to state 148
 
-state 138
+state 140
 
     (45) statement -> arithmeticExpression logicExpression ACTION_ADD_OPERATOR arithmeticExpression . ACTION_ADD_QUADRUPLET
     (15) arithmeticExpression -> arithmeticExpression . plus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
@@ -2277,20 +2294,20 @@ state 138
     or              reduce using rule 65 (ACTION_ADD_QUADRUPLET -> .)
     semicolon       reduce using rule 65 (ACTION_ADD_QUADRUPLET -> .)
 
-    ACTION_ADD_QUADRUPLET          shift and go to state 145
+    ACTION_ADD_QUADRUPLET          shift and go to state 149
 
-state 139
+state 141
 
     (34) subroutine -> while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace . subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -2305,38 +2322,74 @@ state 139
     call            shift and go to state 67
     closeBrace      reduce using rule 40 (subroutine -> .)
 
-    subroutine                     shift and go to state 146
+    subroutine                     shift and go to state 150
     unaryExpression                shift and go to state 66
-
-state 140
-
-    (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while . openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-
-    openParenthesis shift and go to state 147
-
-
-state 141
-
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET . semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-
-    semicolon       shift and go to state 148
-
 
 state 142
 
-    (39) subroutine -> call id openParenthesis closeParenthesis semicolon subroutine .
+    (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while . openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
 
-    closeBrace      reduce using rule 39 (subroutine -> call id openParenthesis closeParenthesis semicolon subroutine .)
+    openParenthesis shift and go to state 151
 
 
 state 143
 
-    (33) subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine . closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET . semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
 
-    closeBrace      shift and go to state 149
+    semicolon       shift and go to state 152
 
 
 state 144
+
+    (39) subroutine -> call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon . subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
+    (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
+    (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
+    (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
+    (38) subroutine -> . unaryExpression semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
+    (40) subroutine -> .
+    (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
+    (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
+
+    consoleWrite    shift and go to state 59
+    consoleRead     shift and go to state 60
+    if              shift and go to state 62
+    while           shift and go to state 63
+    do              shift and go to state 64
+    for             shift and go to state 65
+    id              shift and go to state 61
+    call            shift and go to state 67
+    closeBrace      reduce using rule 40 (subroutine -> .)
+
+    subroutine                     shift and go to state 153
+    unaryExpression                shift and go to state 66
+
+state 145
+
+    (31) subroutine -> consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine .
+
+    closeBrace      reduce using rule 31 (subroutine -> consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine .)
+
+
+state 146
+
+    (32) subroutine -> consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine .
+
+    closeBrace      reduce using rule 32 (subroutine -> consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine .)
+
+
+state 147
+
+    (33) subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine . closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
+
+    closeBrace      shift and go to state 154
+
+
+state 148
 
     (46) statement -> statement logicExpression ACTION_ADD_OPERATOR statement ACTION_ADD_QUADRUPLET .
 
@@ -2352,7 +2405,7 @@ state 144
     semicolon       reduce using rule 46 (statement -> statement logicExpression ACTION_ADD_OPERATOR statement ACTION_ADD_QUADRUPLET .)
 
 
-state 145
+state 149
 
     (45) statement -> arithmeticExpression logicExpression ACTION_ADD_OPERATOR arithmeticExpression ACTION_ADD_QUADRUPLET .
 
@@ -2368,14 +2421,14 @@ state 145
     semicolon       reduce using rule 45 (statement -> arithmeticExpression logicExpression ACTION_ADD_OPERATOR arithmeticExpression ACTION_ADD_QUADRUPLET .)
 
 
-state 146
+state 150
 
     (34) subroutine -> while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine . closeBrace ACTION_WHILE_GOTO subroutine
 
-    closeBrace      shift and go to state 150
+    closeBrace      shift and go to state 155
 
 
-state 147
+state 151
 
     (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis . statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
     (44) statement -> . arithmeticExpression
@@ -2401,16 +2454,16 @@ state 147
     doubleValue     shift and go to state 29
     id              shift and go to state 30
 
-    statement                      shift and go to state 151
+    statement                      shift and go to state 156
     arithmeticExpression           shift and go to state 98
     multiplyDivide                 shift and go to state 23
     val                            shift and go to state 24
     value                          shift and go to state 25
     unaryExpression                shift and go to state 26
 
-state 148
+state 152
 
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon . statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon . statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (44) statement -> . arithmeticExpression
     (45) statement -> . arithmeticExpression logicExpression ACTION_ADD_OPERATOR arithmeticExpression ACTION_ADD_QUADRUPLET
     (46) statement -> . statement logicExpression ACTION_ADD_OPERATOR statement ACTION_ADD_QUADRUPLET
@@ -2435,13 +2488,20 @@ state 148
     id              shift and go to state 30
 
     arithmeticExpression           shift and go to state 98
-    statement                      shift and go to state 152
+    statement                      shift and go to state 157
     multiplyDivide                 shift and go to state 23
     val                            shift and go to state 24
     value                          shift and go to state 25
     unaryExpression                shift and go to state 26
 
-state 149
+state 153
+
+    (39) subroutine -> call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine .
+
+    closeBrace      reduce using rule 39 (subroutine -> call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine .)
+
+
+state 154
 
     (33) subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace . ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (67) ACTION_NEW_IF -> .
@@ -2458,9 +2518,9 @@ state 149
     call            reduce using rule 67 (ACTION_NEW_IF -> .)
     closeBrace      reduce using rule 67 (ACTION_NEW_IF -> .)
 
-    ACTION_NEW_IF                  shift and go to state 153
+    ACTION_NEW_IF                  shift and go to state 158
 
-state 150
+state 155
 
     (34) subroutine -> while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace . ACTION_WHILE_GOTO subroutine
     (71) ACTION_WHILE_GOTO -> .
@@ -2475,9 +2535,9 @@ state 150
     call            reduce using rule 71 (ACTION_WHILE_GOTO -> .)
     closeBrace      reduce using rule 71 (ACTION_WHILE_GOTO -> .)
 
-    ACTION_WHILE_GOTO              shift and go to state 154
+    ACTION_WHILE_GOTO              shift and go to state 159
 
-state 151
+state 156
 
     (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement . closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
     (46) statement -> statement . logicExpression ACTION_ADD_OPERATOR statement ACTION_ADD_QUADRUPLET
@@ -2490,7 +2550,7 @@ state 151
     (53) logicExpression -> . and
     (54) logicExpression -> . or
 
-    closeParenthesis shift and go to state 155
+    closeParenthesis shift and go to state 160
     greaterThan     shift and go to state 110
     lessThan        shift and go to state 111
     isEqual         shift and go to state 112
@@ -2502,9 +2562,9 @@ state 151
 
     logicExpression                shift and go to state 109
 
-state 152
+state 157
 
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement . semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement . semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (46) statement -> statement . logicExpression ACTION_ADD_OPERATOR statement ACTION_ADD_QUADRUPLET
     (47) logicExpression -> . greaterThan
     (48) logicExpression -> . lessThan
@@ -2515,7 +2575,7 @@ state 152
     (53) logicExpression -> . and
     (54) logicExpression -> . or
 
-    semicolon       shift and go to state 156
+    semicolon       shift and go to state 161
     greaterThan     shift and go to state 110
     lessThan        shift and go to state 111
     isEqual         shift and go to state 112
@@ -2527,7 +2587,7 @@ state 152
 
     logicExpression                shift and go to state 109
 
-state 153
+state 158
 
     (33) subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF . ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (68) ACTION_QUADRUPLET_EMPTY_JUMP_END_IF -> .
@@ -2544,20 +2604,20 @@ state 153
     call            reduce using rule 68 (ACTION_QUADRUPLET_EMPTY_JUMP_END_IF -> .)
     closeBrace      reduce using rule 68 (ACTION_QUADRUPLET_EMPTY_JUMP_END_IF -> .)
 
-    ACTION_QUADRUPLET_EMPTY_JUMP_END_IF shift and go to state 157
+    ACTION_QUADRUPLET_EMPTY_JUMP_END_IF shift and go to state 162
 
-state 154
+state 159
 
     (34) subroutine -> while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO . subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -2572,21 +2632,21 @@ state 154
     call            shift and go to state 67
     closeBrace      reduce using rule 40 (subroutine -> .)
 
-    subroutine                     shift and go to state 158
+    subroutine                     shift and go to state 163
     unaryExpression                shift and go to state 66
 
-state 155
+state 160
 
     (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis . ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
     (73) ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE -> .
 
     semicolon       reduce using rule 73 (ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE -> .)
 
-    ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE shift and go to state 159
+    ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE shift and go to state 164
 
-state 156
+state 161
 
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon . ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon . ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (66) ACTION_QUADRUPLET_EMPTY_JUMP -> .
 
     openParenthesis reduce using rule 66 (ACTION_QUADRUPLET_EMPTY_JUMP -> .)
@@ -2594,9 +2654,9 @@ state 156
     doubleValue     reduce using rule 66 (ACTION_QUADRUPLET_EMPTY_JUMP -> .)
     id              reduce using rule 66 (ACTION_QUADRUPLET_EMPTY_JUMP -> .)
 
-    ACTION_QUADRUPLET_EMPTY_JUMP   shift and go to state 160
+    ACTION_QUADRUPLET_EMPTY_JUMP   shift and go to state 165
 
-state 157
+state 162
 
     (33) subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF . elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (41) elseStatement -> . elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
@@ -2604,8 +2664,8 @@ state 157
     (43) elseStatement -> . ACTION_FILL_JUMP
     (70) ACTION_FILL_JUMP -> .
 
-    elif            shift and go to state 162
-    else            shift and go to state 164
+    elif            shift and go to state 167
+    else            shift and go to state 169
     consoleWrite    reduce using rule 70 (ACTION_FILL_JUMP -> .)
     consoleRead     reduce using rule 70 (ACTION_FILL_JUMP -> .)
     if              reduce using rule 70 (ACTION_FILL_JUMP -> .)
@@ -2616,26 +2676,26 @@ state 157
     call            reduce using rule 70 (ACTION_FILL_JUMP -> .)
     closeBrace      reduce using rule 70 (ACTION_FILL_JUMP -> .)
 
-    elseStatement                  shift and go to state 161
-    ACTION_FILL_JUMP               shift and go to state 163
+    elseStatement                  shift and go to state 166
+    ACTION_FILL_JUMP               shift and go to state 168
 
-state 158
+state 163
 
     (34) subroutine -> while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine .
 
     closeBrace      reduce using rule 34 (subroutine -> while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine .)
 
 
-state 159
+state 164
 
     (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE . semicolon subroutine
 
-    semicolon       shift and go to state 165
+    semicolon       shift and go to state 170
 
 
-state 160
+state 165
 
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP . arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP . arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (14) arithmeticExpression -> . multiplyDivide
     (15) arithmeticExpression -> . arithmeticExpression plus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
     (16) arithmeticExpression -> . arithmeticExpression minus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
@@ -2656,13 +2716,13 @@ state 160
     doubleValue     shift and go to state 29
     id              shift and go to state 30
 
-    arithmeticExpression           shift and go to state 166
+    arithmeticExpression           shift and go to state 171
     multiplyDivide                 shift and go to state 23
     val                            shift and go to state 24
     value                          shift and go to state 25
     unaryExpression                shift and go to state 26
 
-state 161
+state 166
 
     (33) subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement . ACTION_FILL_JUMP_END_IF subroutine
     (69) ACTION_FILL_JUMP_END_IF -> .
@@ -2677,18 +2737,18 @@ state 161
     call            reduce using rule 69 (ACTION_FILL_JUMP_END_IF -> .)
     closeBrace      reduce using rule 69 (ACTION_FILL_JUMP_END_IF -> .)
 
-    ACTION_FILL_JUMP_END_IF        shift and go to state 167
+    ACTION_FILL_JUMP_END_IF        shift and go to state 172
 
-state 162
+state 167
 
     (41) elseStatement -> elif . ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
     (70) ACTION_FILL_JUMP -> .
 
     openParenthesis reduce using rule 70 (ACTION_FILL_JUMP -> .)
 
-    ACTION_FILL_JUMP               shift and go to state 168
+    ACTION_FILL_JUMP               shift and go to state 173
 
-state 163
+state 168
 
     (43) elseStatement -> ACTION_FILL_JUMP .
 
@@ -2703,27 +2763,27 @@ state 163
     closeBrace      reduce using rule 43 (elseStatement -> ACTION_FILL_JUMP .)
 
 
-state 164
+state 169
 
     (42) elseStatement -> else . ACTION_FILL_JUMP openBrace subroutine closeBrace
     (70) ACTION_FILL_JUMP -> .
 
     openBrace       reduce using rule 70 (ACTION_FILL_JUMP -> .)
 
-    ACTION_FILL_JUMP               shift and go to state 169
+    ACTION_FILL_JUMP               shift and go to state 174
 
-state 165
+state 170
 
     (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon . subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -2738,32 +2798,34 @@ state 165
     call            shift and go to state 67
     closeBrace      reduce using rule 40 (subroutine -> .)
 
-    subroutine                     shift and go to state 170
+    subroutine                     shift and go to state 175
     unaryExpression                shift and go to state 66
 
-state 166
+state 171
 
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression . closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression . ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (15) arithmeticExpression -> arithmeticExpression . plus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
     (16) arithmeticExpression -> arithmeticExpression . minus ACTION_ADD_OPERATOR multiplyDivide ACTION_ADD_QUADRUPLET
+    (74) ACTION_FOR_INCREMENT -> .
 
-    closeParenthesis shift and go to state 171
     plus            shift and go to state 37
     minus           shift and go to state 38
+    closeParenthesis reduce using rule 74 (ACTION_FOR_INCREMENT -> .)
 
+    ACTION_FOR_INCREMENT           shift and go to state 176
 
-state 167
+state 172
 
     (33) subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF . subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -2778,45 +2840,45 @@ state 167
     call            shift and go to state 67
     closeBrace      reduce using rule 40 (subroutine -> .)
 
-    subroutine                     shift and go to state 172
+    subroutine                     shift and go to state 177
     unaryExpression                shift and go to state 66
 
-state 168
+state 173
 
     (41) elseStatement -> elif ACTION_FILL_JUMP . openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
 
-    openParenthesis shift and go to state 173
+    openParenthesis shift and go to state 178
 
 
-state 169
+state 174
 
     (42) elseStatement -> else ACTION_FILL_JUMP . openBrace subroutine closeBrace
 
-    openBrace       shift and go to state 174
+    openBrace       shift and go to state 179
 
 
-state 170
+state 175
 
     (35) subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine .
 
     closeBrace      reduce using rule 35 (subroutine -> do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine .)
 
 
-state 171
+state 176
 
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis . openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT . closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
 
-    openBrace       shift and go to state 175
+    closeParenthesis shift and go to state 180
 
 
-state 172
+state 177
 
     (33) subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine .
 
     closeBrace      reduce using rule 33 (subroutine -> if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine .)
 
 
-state 173
+state 178
 
     (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis . statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
     (44) statement -> . arithmeticExpression
@@ -2842,25 +2904,25 @@ state 173
     doubleValue     shift and go to state 29
     id              shift and go to state 30
 
-    statement                      shift and go to state 176
+    statement                      shift and go to state 181
     arithmeticExpression           shift and go to state 98
     multiplyDivide                 shift and go to state 23
     val                            shift and go to state 24
     value                          shift and go to state 25
     unaryExpression                shift and go to state 26
 
-state 174
+state 179
 
     (42) elseStatement -> else ACTION_FILL_JUMP openBrace . subroutine closeBrace
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -2875,39 +2937,17 @@ state 174
     call            shift and go to state 67
     closeBrace      reduce using rule 40 (subroutine -> .)
 
-    subroutine                     shift and go to state 177
+    subroutine                     shift and go to state 182
     unaryExpression                shift and go to state 66
 
-state 175
+state 180
 
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace . subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
-    (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
-    (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
-    (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
-    (40) subroutine -> .
-    (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
-    (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis . openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
 
-    consoleWrite    shift and go to state 59
-    consoleRead     shift and go to state 60
-    if              shift and go to state 62
-    while           shift and go to state 63
-    do              shift and go to state 64
-    for             shift and go to state 65
-    id              shift and go to state 61
-    call            shift and go to state 67
-    closeBrace      reduce using rule 40 (subroutine -> .)
+    openBrace       shift and go to state 183
 
-    subroutine                     shift and go to state 178
-    unaryExpression                shift and go to state 66
 
-state 176
+state 181
 
     (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement . closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
     (46) statement -> statement . logicExpression ACTION_ADD_OPERATOR statement ACTION_ADD_QUADRUPLET
@@ -2920,7 +2960,7 @@ state 176
     (53) logicExpression -> . and
     (54) logicExpression -> . or
 
-    closeParenthesis shift and go to state 179
+    closeParenthesis shift and go to state 184
     greaterThan     shift and go to state 110
     lessThan        shift and go to state 111
     isEqual         shift and go to state 112
@@ -2932,109 +2972,25 @@ state 176
 
     logicExpression                shift and go to state 109
 
-state 177
+state 182
 
     (42) elseStatement -> else ACTION_FILL_JUMP openBrace subroutine . closeBrace
 
-    closeBrace      shift and go to state 180
-
-
-state 178
-
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine . closeBrace ACTION_WHILE_GOTO subroutine
-
-    closeBrace      shift and go to state 181
-
-
-state 179
-
-    (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis . ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
-    (66) ACTION_QUADRUPLET_EMPTY_JUMP -> .
-
-    openBrace       reduce using rule 66 (ACTION_QUADRUPLET_EMPTY_JUMP -> .)
-
-    ACTION_QUADRUPLET_EMPTY_JUMP   shift and go to state 182
-
-state 180
-
-    (42) elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .
-
-    consoleWrite    reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
-    consoleRead     reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
-    if              reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
-    while           reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
-    do              reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
-    for             reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
-    id              reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
-    call            reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
-    closeBrace      reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
-
-
-state 181
-
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace . ACTION_WHILE_GOTO subroutine
-    (71) ACTION_WHILE_GOTO -> .
-
-    consoleWrite    reduce using rule 71 (ACTION_WHILE_GOTO -> .)
-    consoleRead     reduce using rule 71 (ACTION_WHILE_GOTO -> .)
-    if              reduce using rule 71 (ACTION_WHILE_GOTO -> .)
-    while           reduce using rule 71 (ACTION_WHILE_GOTO -> .)
-    do              reduce using rule 71 (ACTION_WHILE_GOTO -> .)
-    for             reduce using rule 71 (ACTION_WHILE_GOTO -> .)
-    id              reduce using rule 71 (ACTION_WHILE_GOTO -> .)
-    call            reduce using rule 71 (ACTION_WHILE_GOTO -> .)
-    closeBrace      reduce using rule 71 (ACTION_WHILE_GOTO -> .)
-
-    ACTION_WHILE_GOTO              shift and go to state 183
-
-state 182
-
-    (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP . openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
-
-    openBrace       shift and go to state 184
+    closeBrace      shift and go to state 185
 
 
 state 183
 
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO . subroutine
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace . subroutine closeBrace ACTION_FOR_GOTO subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
-    (40) subroutine -> .
-    (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
-    (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
-
-    consoleWrite    shift and go to state 59
-    consoleRead     shift and go to state 60
-    if              shift and go to state 62
-    while           shift and go to state 63
-    do              shift and go to state 64
-    for             shift and go to state 65
-    id              shift and go to state 61
-    call            shift and go to state 67
-    closeBrace      reduce using rule 40 (subroutine -> .)
-
-    subroutine                     shift and go to state 185
-    unaryExpression                shift and go to state 66
-
-state 184
-
-    (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace . subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
-    (31) subroutine -> . consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
-    (32) subroutine -> . consoleRead openParenthesis id closeParenthesis semicolon subroutine
-    (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
-    (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
-    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
-    (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
-    (38) subroutine -> . unaryExpression semicolon subroutine
-    (39) subroutine -> . call id openParenthesis closeParenthesis semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     (40) subroutine -> .
     (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
     (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
@@ -3052,21 +3008,134 @@ state 184
     subroutine                     shift and go to state 186
     unaryExpression                shift and go to state 66
 
+state 184
+
+    (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis . ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
+    (66) ACTION_QUADRUPLET_EMPTY_JUMP -> .
+
+    openBrace       reduce using rule 66 (ACTION_QUADRUPLET_EMPTY_JUMP -> .)
+
+    ACTION_QUADRUPLET_EMPTY_JUMP   shift and go to state 187
+
 state 185
 
-    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine .
+    (42) elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .
 
-    closeBrace      reduce using rule 36 (subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine .)
+    consoleWrite    reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
+    consoleRead     reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
+    if              reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
+    while           reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
+    do              reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
+    for             reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
+    id              reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
+    call            reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
+    closeBrace      reduce using rule 42 (elseStatement -> else ACTION_FILL_JUMP openBrace subroutine closeBrace .)
 
 
 state 186
 
-    (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine . closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine . closeBrace ACTION_FOR_GOTO subroutine
 
-    closeBrace      shift and go to state 187
+    closeBrace      shift and go to state 188
 
 
 state 187
+
+    (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP . openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
+
+    openBrace       shift and go to state 189
+
+
+state 188
+
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace . ACTION_FOR_GOTO subroutine
+    (75) ACTION_FOR_GOTO -> .
+
+    consoleWrite    reduce using rule 75 (ACTION_FOR_GOTO -> .)
+    consoleRead     reduce using rule 75 (ACTION_FOR_GOTO -> .)
+    if              reduce using rule 75 (ACTION_FOR_GOTO -> .)
+    while           reduce using rule 75 (ACTION_FOR_GOTO -> .)
+    do              reduce using rule 75 (ACTION_FOR_GOTO -> .)
+    for             reduce using rule 75 (ACTION_FOR_GOTO -> .)
+    id              reduce using rule 75 (ACTION_FOR_GOTO -> .)
+    call            reduce using rule 75 (ACTION_FOR_GOTO -> .)
+    closeBrace      reduce using rule 75 (ACTION_FOR_GOTO -> .)
+
+    ACTION_FOR_GOTO                shift and go to state 190
+
+state 189
+
+    (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace . subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
+    (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
+    (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
+    (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
+    (38) subroutine -> . unaryExpression semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
+    (40) subroutine -> .
+    (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
+    (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
+
+    consoleWrite    shift and go to state 59
+    consoleRead     shift and go to state 60
+    if              shift and go to state 62
+    while           shift and go to state 63
+    do              shift and go to state 64
+    for             shift and go to state 65
+    id              shift and go to state 61
+    call            shift and go to state 67
+    closeBrace      reduce using rule 40 (subroutine -> .)
+
+    subroutine                     shift and go to state 191
+    unaryExpression                shift and go to state 66
+
+state 190
+
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO . subroutine
+    (31) subroutine -> . consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
+    (32) subroutine -> . consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
+    (33) subroutine -> . if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
+    (34) subroutine -> . while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    (35) subroutine -> . do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
+    (36) subroutine -> . for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
+    (37) subroutine -> . id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
+    (38) subroutine -> . unaryExpression semicolon subroutine
+    (39) subroutine -> . call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
+    (40) subroutine -> .
+    (23) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
+    (24) unaryExpression -> . id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
+
+    consoleWrite    shift and go to state 59
+    consoleRead     shift and go to state 60
+    if              shift and go to state 62
+    while           shift and go to state 63
+    do              shift and go to state 64
+    for             shift and go to state 65
+    id              shift and go to state 61
+    call            shift and go to state 67
+    closeBrace      reduce using rule 40 (subroutine -> .)
+
+    subroutine                     shift and go to state 192
+    unaryExpression                shift and go to state 66
+
+state 191
+
+    (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine . closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
+
+    closeBrace      shift and go to state 193
+
+
+state 192
+
+    (36) subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine .
+
+    closeBrace      reduce using rule 36 (subroutine -> for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine .)
+
+
+state 193
 
     (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace . ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
     (68) ACTION_QUADRUPLET_EMPTY_JUMP_END_IF -> .
@@ -3083,9 +3152,9 @@ state 187
     call            reduce using rule 68 (ACTION_QUADRUPLET_EMPTY_JUMP_END_IF -> .)
     closeBrace      reduce using rule 68 (ACTION_QUADRUPLET_EMPTY_JUMP_END_IF -> .)
 
-    ACTION_QUADRUPLET_EMPTY_JUMP_END_IF shift and go to state 188
+    ACTION_QUADRUPLET_EMPTY_JUMP_END_IF shift and go to state 194
 
-state 188
+state 194
 
     (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF . elseStatement
     (41) elseStatement -> . elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement
@@ -3093,8 +3162,8 @@ state 188
     (43) elseStatement -> . ACTION_FILL_JUMP
     (70) ACTION_FILL_JUMP -> .
 
-    elif            shift and go to state 162
-    else            shift and go to state 164
+    elif            shift and go to state 167
+    else            shift and go to state 169
     consoleWrite    reduce using rule 70 (ACTION_FILL_JUMP -> .)
     consoleRead     reduce using rule 70 (ACTION_FILL_JUMP -> .)
     if              reduce using rule 70 (ACTION_FILL_JUMP -> .)
@@ -3105,10 +3174,10 @@ state 188
     call            reduce using rule 70 (ACTION_FILL_JUMP -> .)
     closeBrace      reduce using rule 70 (ACTION_FILL_JUMP -> .)
 
-    ACTION_FILL_JUMP               shift and go to state 163
-    elseStatement                  shift and go to state 189
+    ACTION_FILL_JUMP               shift and go to state 168
+    elseStatement                  shift and go to state 195
 
-state 189
+state 195
 
     (41) elseStatement -> elif ACTION_FILL_JUMP openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement .
 
@@ -3133,11 +3202,11 @@ WARNING: shift/reduce conflict for greaterOrEqual in state 98 resolved as shift
 WARNING: shift/reduce conflict for lessOrEqual in state 98 resolved as shift
 WARNING: shift/reduce conflict for and in state 98 resolved as shift
 WARNING: shift/reduce conflict for or in state 98 resolved as shift
-WARNING: shift/reduce conflict for greaterThan in state 137 resolved as shift
-WARNING: shift/reduce conflict for lessThan in state 137 resolved as shift
-WARNING: shift/reduce conflict for isEqual in state 137 resolved as shift
-WARNING: shift/reduce conflict for notEqual in state 137 resolved as shift
-WARNING: shift/reduce conflict for greaterOrEqual in state 137 resolved as shift
-WARNING: shift/reduce conflict for lessOrEqual in state 137 resolved as shift
-WARNING: shift/reduce conflict for and in state 137 resolved as shift
-WARNING: shift/reduce conflict for or in state 137 resolved as shift
+WARNING: shift/reduce conflict for greaterThan in state 139 resolved as shift
+WARNING: shift/reduce conflict for lessThan in state 139 resolved as shift
+WARNING: shift/reduce conflict for isEqual in state 139 resolved as shift
+WARNING: shift/reduce conflict for notEqual in state 139 resolved as shift
+WARNING: shift/reduce conflict for greaterOrEqual in state 139 resolved as shift
+WARNING: shift/reduce conflict for lessOrEqual in state 139 resolved as shift
+WARNING: shift/reduce conflict for and in state 139 resolved as shift
+WARNING: shift/reduce conflict for or in state 139 resolved as shift
