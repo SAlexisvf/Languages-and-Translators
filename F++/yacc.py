@@ -104,10 +104,8 @@ def p_val(p):
 
 def p_unaryExpression(p):
     '''
-    unaryExpression : id plusPlus
-    | id minusMinus
-    | plusPlus id
-    | minusMinus id
+    unaryExpression : id ACTION_UNARY_ADD_OPERANDS plusPlus ACTION_UNARY_PLUS
+    | id ACTION_UNARY_ADD_OPERANDS minusMinus ACTION_UNARY_MINUS
     '''
 
 def p_value(p):
@@ -133,8 +131,9 @@ def p_subroutine(p):
     subroutine : consoleWrite openParenthesis cout closeParenthesis semicolon subroutine
     | consoleRead openParenthesis id closeParenthesis semicolon subroutine
     | if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
-    | while openParenthesis statement closeParenthesis openBrace subroutine closeBrace subroutine
-    | for openParenthesis varSequence semicolon statement semicolon arithmeticExpression closeParenthesis openBrace subroutine closeBrace subroutine
+    | while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
+    | do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
+    | for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression closeParenthesis openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     | id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     | unaryExpression semicolon subroutine
     | call id openParenthesis closeParenthesis semicolon subroutine
@@ -151,7 +150,7 @@ def p_statement(p):
     '''
     statement : arithmeticExpression 
     | arithmeticExpression logicExpression ACTION_ADD_OPERATOR arithmeticExpression ACTION_ADD_QUADRUPLET
-    | statement logicExpression statement
+    | statement logicExpression ACTION_ADD_OPERATOR statement ACTION_ADD_QUADRUPLET
     '''
 
 def p_logicExpression(p):
@@ -196,6 +195,26 @@ def p_action_double_value(p):
     "ACTION_DOUBLE_VALUE :"
     operands_stack.append(p[-1])
     types_stack.append('double')
+
+def p_action_unary_add_operands(p):
+    "ACTION_UNARY_ADD_OPERANDS :"
+    operands_stack.append(symbols_table[p[-1]].address)
+    operands_stack.append('1')
+
+def p_action_unary_plus(p):
+    "ACTION_UNARY_PLUS :"
+    add_unary_quadruplet('+')
+
+def p_action_unary_minus(p):
+    "ACTION_UNARY_MINUS :"
+    add_unary_quadruplet('-')
+
+def add_unary_quadruplet(operator):
+    global quadruplet_index
+    right_operand = operands_stack.pop()
+    left_operand = operands_stack.pop()
+    quadruplets.append(operator + ' ' + str(left_operand) + ' ' + str(right_operand) + ' ' + str(left_operand))
+    quadruplet_index += 1
 
 def p_action_add_operator(p):
     "ACTION_ADD_OPERATOR :"
@@ -242,7 +261,7 @@ def p_action_quadruplet_empty_jump_end_if(p):
     quadruplets.append(str("goto") + ' ')
     quadruplet_index += 1
 
-def p_ACTION_FILL_JUMP_end_if(p):
+def p_action_fill_jump_end_if(p):
     "ACTION_FILL_JUMP_END_IF :"
     for goto_index in ifs_stack[len(ifs_stack) - 1]:
         fill_jump(goto_index - 1, quadruplet_index)
@@ -251,6 +270,26 @@ def p_ACTION_FILL_JUMP_end_if(p):
 def p_action_fill_jump(p):
     "ACTION_FILL_JUMP :"
     fill_jump(jumps_stack.pop() - 1, quadruplet_index)
+
+def p_action_while_goto(p):
+    "ACTION_WHILE_GOTO :"
+    global quadruplet_index
+    empty_jump_quadruplet_index = jumps_stack.pop() - 1
+    quadruplets.append(str("goto ") + str(empty_jump_quadruplet_index))
+    quadruplet_index += 1
+    fill_jump(empty_jump_quadruplet_index, quadruplet_index)
+
+def p_action_do_while_jump_index(p):
+    "ACTION_DO_WHILE_INDEX :"
+    global quadruplet_index
+    jumps_stack.append(quadruplet_index)
+
+def p_action_quadruplet_empty_jump_do_while(p):
+    "ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE :"
+    global quadruplet_index
+    statement_result = quadruplets[quadruplet_index - 2].split()
+    quadruplets.append(str("gotoT") + ' ' + str(statement_result[len(statement_result) - 1]) + ' ' + str(jumps_stack.pop()))
+    quadruplet_index += 1
 
 def fill_jump(empty_jump_quadruplet_index, goto_index):
     quadruplets[empty_jump_quadruplet_index] = quadruplets[empty_jump_quadruplet_index] + str(goto_index)

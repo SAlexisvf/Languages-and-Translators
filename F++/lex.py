@@ -12,6 +12,7 @@ reserved = {
     'else':'else',
     'elif':'elif',
     'while':'while',
+    'do':'do',
     'for':'for',
     'and':'and',
     'or':'or',
@@ -65,6 +66,7 @@ tokens = [
     'else',
     'elif',
     'while',
+    'do',
     'for',
 
     # data input/output
