@@ -16,6 +16,7 @@ jumps_stack = []
 ifs_stack = []
 quadruplets = []
 for_increment = []
+function_id = []
 
 def peek(list):
     if len(list) == 0:
@@ -311,13 +312,16 @@ def p_action_for_goto(p):
 
 def p_action_add_function(p):
     "ACTION_ADD_FUNCTION :"
-    global quadruplet_index
-    function_id = p[-1]
-    add_symbol(function_id, 'function', quadruplet_index)
+    global quadruplet_index, function_id
+    function_id.append(p[-1])
+    add_symbol(function_id[-1], 'function', quadruplet_index)
+    quadruplets.append('goto ')
+    quadruplet_index += 1
 
 def p_action_end_function(p):
     "ACTION_END_FUNCTION :"
-    global quadruplet_index
+    global quadruplet_index, symbols_table, function_id
+    fill_jump(symbols_table[function_id.pop()].index-1, quadruplet_index+1)
     quadruplets.append('return')
     quadruplet_index += 1
 
@@ -325,7 +329,7 @@ def p_action_goto_function(p):
     "ACTION_GOTO_FUNCTION :"
     global quadruplet_index
     function_id = p[-1]
-    quadruplets.append('goto ' + str(symbols_table[function_id].index))
+    quadruplets.append('goto ' + str(symbols_table[function_id].index+1))
     quadruplet_index += 1
 
 def p_action_console_write(p):
