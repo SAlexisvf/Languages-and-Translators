@@ -470,7 +470,7 @@ def p_action_goto_function(p):
     "ACTION_GOTO_FUNCTION :"
     global quadruplet_index
     function_id = p[-1]
-    quadruplets.append('goto ' + str(symbols_table[function_id].index+1))
+    quadruplets.append('call ' + str(symbols_table[function_id].index+1))
     quadruplet_index += 1
 
 def p_action_console_write(p):
