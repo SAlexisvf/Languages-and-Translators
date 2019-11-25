@@ -1,4 +1,4 @@
-int a, b, c;
+int a, b, c, d;
 
 function my_func1 () {
     a = 15;
@@ -7,13 +7,13 @@ function my_func1 () {
 
 main() {
 
-    c = 15;
+    c = a*15 *b*d*( (25 * c) + (b + (18 * b)));
     consoleRead(a);
     b = 30;
 
     for (a = 1; a < 10; a++){
         for (b = 1; b < 10; b++){
-            c = 15 * 8;
+            c++;
         }
         if (b == 30){
             call my_func1();

@@ -1,9 +1,147 @@
-import ply.yacc as yacc
 import sys
-from common import symbols_table_structure
 
-# Get the token map from the lexer.  This is required.
-from lex import tokens
+import ply.yacc as yacc
+import ply.lex as lex
+
+from common import symbols_table_structure
+from executor import execute
+
+# reserved keywords
+reserved = {
+    'int':'int',
+    'double':'double',
+    'consoleRead':'consoleRead',
+    'consoleWrite':'consoleWrite',
+    'main':'main',
+    'function':'function',
+    'if':'if',
+    'else':'else',
+    'elif':'elif',
+    'while':'while',
+    'do':'do',
+    'for':'for',
+    'and':'and',
+    'or':'or',
+    'call':'call',
+}
+
+# List of token names.   This is always required
+tokens = [
+    # identifier for variables and functions
+    'id',
+
+    # data types and values
+    'int',
+    'double',
+    'string',
+    'intValue',
+    'doubleValue',
+
+    # logic operators
+    'and',
+    'or',
+    'isEqual',
+    'notEqual',
+    'greaterThan',
+    'lessThan',
+    'greaterOrEqual',
+    'lessOrEqual',
+
+    # arithmetic operators
+    'equal',
+    'plus',
+    'minus',
+    'multiply',
+    'divide',
+    'plusPlus',
+    'minusMinus',
+
+    # syntax operators
+    'comma',
+    'semicolon',
+    'openParenthesis',
+    'closeParenthesis',
+    'openBracket',
+    'closeBracket',
+    'openBrace',
+    'closeBrace',
+    'not',
+
+    # conditionals and cycles
+    'if',
+    'else',
+    'elif',
+    'while',
+    'do',
+    'for',
+
+    # data input/output
+    'consoleRead',
+    'consoleWrite',
+
+    # reserved names
+    'main',
+    'function',
+    'call',
+
+]
+
+# tokens = tokens + list(reserved.values())
+
+# Regular expression rules for simple tokens
+t_isEqual = r'\=\='
+t_notEqual = r'\!\='
+t_greaterThan = r'\>'
+t_lessThan = r'\<'
+t_greaterOrEqual = r'\>\='
+t_lessOrEqual = r'\<\='
+t_equal = r'\='
+t_plus = r'\+'
+t_minus = r'\-'
+t_multiply = r'\*'
+t_divide = r'\/'
+t_plusPlus = r'\+\+'
+t_minusMinus = r'\-\-'
+t_comma = r'\,'
+t_semicolon = r'\;'
+t_openParenthesis = r'\('
+t_closeParenthesis = r'\)'
+t_openBracket = r'\['
+t_closeBracket = r'\]'
+t_openBrace = r'\{'
+t_closeBrace = r'\}'
+t_not = r'\!'
+t_string = r'\'[a-zA-Z0-9 \.\?\:\t\r\n\f()\[\]\&\!\@\#\$\%\^\-\=\+\/\,]*\''
+
+# A string containing ignored characters (spaces and tabs)
+t_ignore  =  ' \t\n'
+t_ignore_COMMENT = r'\#.*'
+
+def t_doubleValue(t):
+    r'\d+\.\d+'
+    t.value = float(t.value)
+    return t
+
+def t_intValue(t):
+	r'\d+'
+	t.value = int(t.value)
+	return t
+
+def t_id(t):
+    r'[a-zA-Z_][a-zA-Z_0-9]*'
+    if t.value in reserved:
+        t.type = reserved[ t.value ]
+    else:  
+        t.type = 'id'
+    return t
+
+# Error handling rule
+def t_error(t):
+    print("Illegal character '%s'" % t.value[0])
+    t.lexer.skip(1)
+
+# Build the lexer
+lexer = lex.lex()
 
 available_variables_in_memory = 50
 quadruplet_index = 1
@@ -17,6 +155,7 @@ ifs_stack = []
 quadruplets = []
 for_increment = []
 function_id = []
+write_vars = []
 
 def peek(list):
     if len(list) == 0:
@@ -34,13 +173,6 @@ def p_program(p):
     '''
     print('Valid program!!!')
     print()
-    print('Memory:')
-    for variable in symbols_table:
-        print('variable name:', symbols_table[variable].id + '     ' + 'type:', symbols_table[variable].type + '    ' + 'address:', symbols_table[variable].address)
-    print()
-    print('Quadruplets:')
-    for i in range (len(quadruplets)):
-        print(str(i+1) + ') ' + quadruplets[i])
 	
 def p_var(p):
     '''
@@ -53,9 +185,9 @@ def p_var(p):
 
 def p_varSequence(p):
     '''
-    varSequence : variable equal arithmeticExpression
+    varSequence : variable equal arithmeticExpression ACTION_GENERATE_QUADRUPLET
         | variable
-        | variable equal arithmeticExpression comma varSequence
+        | variable equal arithmeticExpression ACTION_GENERATE_QUADRUPLET comma varSequence
         | variable comma varSequence
     '''
     if (len(p) == 2 or p[len(p)-2] == '='):
@@ -170,11 +302,20 @@ def p_logicExpression(p):
 
 def p_cout(p):
     '''
-    cout : arithmeticExpression
-    | string
+    cout : id multipleCout
+    | string multipleCout
     '''
-    p[0] = p[1]
+    write_vars.append(p[1])
 
+def p_multipleCout(p):
+    '''
+    multipleCout : comma id multipleCout
+    | comma string multipleCout
+    |
+    '''
+    if len(p) == 4:
+        write_vars.append(p[2])
+        
 # Error rule for syntax errors
 def p_error(p):
     raise Exception("Syntax error in input!")
@@ -334,9 +475,15 @@ def p_action_goto_function(p):
 
 def p_action_console_write(p):
     "ACTION_CONSOLE_WRITE :"
-    global quadruplet_index
-    cout = p[-1]
-    quadruplets.append('consoleWrite ' + str(cout))
+    global quadruplet_index, write_vars
+    cout = ''
+    for var in write_vars:
+        if var[0] == "'":
+            cout = var.replace("'", "") + ' ' + cout
+        else:
+            cout = '#' + var + ' ' + cout
+    write_vars = []
+    quadruplets.append('consoleWrite ' + cout)
     quadruplet_index += 1
 
 def p_action_console_read(p):
@@ -359,5 +506,7 @@ if (len(sys.argv) > 1):
     program = program_file.read().replace('\\n', '\n')
     parser.parse(program)
     program_file.close()
+
+    execute(quadruplets, symbols_table, available_variables_in_memory)
 else:
     raise Exception('''Test file not provided''')
