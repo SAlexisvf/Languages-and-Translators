@@ -171,8 +171,8 @@ def p_program(p):
     '''
 	program : var func mainProgram
     '''
-    print('Valid program!!!')
-    print()
+    # print('Valid program!!!')
+    # print()
 	
 def p_var(p):
     '''
@@ -492,7 +492,6 @@ def p_action_console_read(p):
     cin = p[-1]
     quadruplets.append('consoleRead ' + str(cin))
     quadruplet_index += 1
-
 
 def fill_jump(empty_jump_quadruplet_index, goto_index):
     quadruplets[empty_jump_quadruplet_index] = quadruplets[empty_jump_quadruplet_index] + str(goto_index)

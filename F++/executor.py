@@ -5,9 +5,10 @@ from common import symbols_table_structure
 functions_stack = []
 
 def execute(quadruplets, symbols_table, temporal_variables):
+    # print_quadruplets_and_memory(quadruplets, symbols_table)
     for i in range (temporal_variables):
         symbols_table['temp_' + str(i)] = symbols_table_structure('temp_' + str(i), 'temp', '#' + str(i), 0)
-    # print_quadruplets_and_memory(quadruplets, symbols_table)
+    
     current_quadruplet = 1
     while current_quadruplet <= len(quadruplets):
         current_quadruplet = execute_single_quadruplet(quadruplets[current_quadruplet-1].split(), current_quadruplet, symbols_table)
@@ -20,9 +21,10 @@ def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_tab
                     print(symbols_table[data[1:]].value, end=' ')
                 else:
                     raise Exception (f'ConsoleWrite Error! variable {data[1:]} is not defined')
+            elif data == '%n':
+                print()
             else:
                 print(data, end=' ')
-        print()
 
     elif single_quadruplet[0] == 'consoleRead':
         for data in single_quadruplet[1:]:
@@ -45,6 +47,10 @@ def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_tab
         if not symbols_table[get_name_with_address(single_quadruplet[1], symbols_table)].value:
             return ast.literal_eval(single_quadruplet[2])
 
+    elif single_quadruplet[0] == 'gotoT':
+        if symbols_table[get_name_with_address(single_quadruplet[1], symbols_table)].value:
+            return ast.literal_eval(single_quadruplet[2])
+
     elif single_quadruplet[0] == 'goto':
         return ast.literal_eval(single_quadruplet[1])
 
@@ -62,41 +68,41 @@ def get_name_with_address(address, symbols_table):
         if symbols_table[key].address == address:
             return key
 
-def arithmetic_operation(operator, operand1, operand2, symbols_table):
-    if operand1[0] == '#':
-        operand1 = symbols_table[get_name_with_address(operand1, symbols_table)].value
+def arithmetic_operation(operator, operand_1, operand_2, symbols_table):
+    if operand_1[0] == '#':
+        operand_1 = symbols_table[get_name_with_address(operand_1, symbols_table)].value
     else:
-        operand1 = ast.literal_eval(operand1)
+        operand_1 = ast.literal_eval(operand_1)
 
-    if operand2[0] == '#':
-        operand2 = symbols_table[get_name_with_address(operand2, symbols_table)].value
+    if operand_2[0] == '#':
+        operand_2 = symbols_table[get_name_with_address(operand_2, symbols_table)].value
     else:
-        operand2 = ast.literal_eval(operand2)
+        operand_2 = ast.literal_eval(operand_2)
     
     if operator == '+':
-        return operand1 + operand2
+        return operand_1 + operand_2
     elif operator == '-':
-        return operand1 - operand2
+        return operand_1 - operand_2
     elif operator == '*':
-        return operand1 * operand2
+        return operand_1 * operand_2
     elif operator == '/':
-        return operand1 / operand2
+        return operand_1 / operand_2
     elif operator == '>':
-        return operand1 > operand2
+        return operand_1 > operand_2
     elif operator == '<':
-        return operand1 < operand2
+        return operand_1 < operand_2
     elif operator == '>=':
-        return operand1 >= operand2
+        return operand_1 >= operand_2
     elif operator == '<=':
-        return operand1 <= operand2
+        return operand_1 <= operand_2
     elif operator == '==':
-        return operand1 == operand2
+        return operand_1 == operand_2
     elif operator == '!=':
-        return operand1 != operand2
+        return operand_1 != operand_2
     elif operator == 'and':
-        return operand1 and operand2
+        return operand_1 and operand_2
     elif operator == 'or':
-        return operand1 or operand2
+        return operand_1 or operand_2
 
 def print_quadruplets_and_memory(quadruplets, symbols_table):
     print('Memory:')
@@ -106,3 +112,4 @@ def print_quadruplets_and_memory(quadruplets, symbols_table):
     print('Quadruplets:')
     for i in range (len(quadruplets)):
         print(str(i+1) + ') ' + quadruplets[i])
+    print()
