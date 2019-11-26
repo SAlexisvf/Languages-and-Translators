@@ -195,25 +195,6 @@ def p_varSequence(p):
     else:
         p[0] = p[len(p)-1] + [p[1]]
 
-# def p_variable(p):
-#     '''
-#     variable : id dimentions
-#     '''
-#     p[0] = p[1]
-
-# def p_dimentions(p):
-#     '''
-#     dimentions : openBracket valueArray ACTION_CREATE_ARRAY closeBracket
-#     | openBracket value closeBracket openBracket value closeBracket
-#     |
-#     '''
-
-# def p_valueArray(p):
-#     '''
-#     valueArray : intValue
-#     '''
-#     p[0] = p[1]
-
 def p_type(p):
     '''
     type : int
@@ -339,12 +320,12 @@ def p_multipleCout(p):
 def p_error(p):
     raise Exception("Syntax error in input!")
 
-def add_symbol(name, data_type, index=0):
+def add_symbol(name, data_type, index=0, dimention=0):
     global symbols_table_index
     if (data_type == 'int_array' or data_type == 'double_array'):
-        symbols_table[name] = symbols_table_structure(name, data_type, '*' + str(symbols_table_index), index)
+        symbols_table[name] = symbols_table_structure(name, data_type, '*' + str(symbols_table_index), index, dimention)
     else:
-        symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index), index)
+        symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index), index, dimention)
     symbols_table_index += 1
 
 def p_action_var_value(p):
@@ -522,8 +503,7 @@ def p_action_create_array(p):
     array_name = p[-3]
     dimention = p[-1]
     array_type = 'int_array' if p[-4] == 'int' else 'double_array'
-    for i in range (dimention):
-        add_symbol(array_name + '_' + str(i), array_type)
+    add_symbol(array_name, array_type, dimention=dimention)
 
 def p_action_generate_array_quadruplet(p):
     "ACTION_GENERATE_ARRAY_QUADRUPLET :"
