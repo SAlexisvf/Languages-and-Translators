@@ -2,6 +2,7 @@ import sys
 
 import ply.yacc as yacc
 import ply.lex as lex
+import numpy as np
 
 from common import symbols_table_structure
 from executor import execute
@@ -177,36 +178,41 @@ def p_program(p):
 def p_var(p):
     '''
     var : type varSequence semicolon var
+    | type id openBracket intValue ACTION_CREATE_ARRAY closeBracket semicolon var
     |
     '''
-    if (len(p) > 1):
+    if (len(p) == 5):
         for name in p[2]:
             add_symbol(name, p[1])
 
 def p_varSequence(p):
     '''
-    varSequence : variable equal arithmeticExpression ACTION_GENERATE_QUADRUPLET
-        | variable
-        | variable equal arithmeticExpression ACTION_GENERATE_QUADRUPLET comma varSequence
-        | variable comma varSequence
+    varSequence : id comma varSequence
+        | id
     '''
     if (len(p) == 2 or p[len(p)-2] == '='):
         p[0] = [p[1]]
     else:
         p[0] = p[len(p)-1] + [p[1]]
 
-def p_variable(p):
-    '''
-    variable : id dimentions
-    '''
-    p[0] = p[1]
+# def p_variable(p):
+#     '''
+#     variable : id dimentions
+#     '''
+#     p[0] = p[1]
 
-def p_dimentions(p):
-    '''
-    dimentions : openBracket value closeBracket
-    | openBracket value closeBracket openBracket value closeBracket
-    |
-    '''
+# def p_dimentions(p):
+#     '''
+#     dimentions : openBracket valueArray ACTION_CREATE_ARRAY closeBracket
+#     | openBracket value closeBracket openBracket value closeBracket
+#     |
+#     '''
+
+# def p_valueArray(p):
+#     '''
+#     valueArray : intValue
+#     '''
+#     p[0] = p[1]
 
 def p_type(p):
     '''
@@ -249,6 +255,14 @@ def p_value(p):
     | id ACTION_VAR_VALUE
     '''
 
+def p_valueArray(p):
+    '''
+    valueArray : intValue
+    | doubleValue
+    | id
+    '''
+    p[0] = p[1]
+
 def p_func(p):
     '''
     func : function id ACTION_ADD_FUNCTION openParenthesis closeParenthesis openBrace subroutine closeBrace ACTION_END_FUNCTION func
@@ -269,6 +283,7 @@ def p_subroutine(p):
     | do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
     | for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     | id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
+    | id openBracket arithmeticExpression closeBracket equal arithmeticExpression ACTION_GENERATE_ARRAY_QUADRUPLET semicolon subroutine
     | unaryExpression semicolon subroutine
     | call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     |
@@ -304,8 +319,12 @@ def p_cout(p):
     '''
     cout : id multipleCout
     | string multipleCout
+    | id openBracket arithmeticExpression closeBracket
     '''
-    write_vars.append(p[1])
+    if len(p) > 3:
+        write_vars.append(p[1]+p[2])
+    else:
+        write_vars.append(p[1])
 
 def p_multipleCout(p):
     '''
@@ -322,7 +341,10 @@ def p_error(p):
 
 def add_symbol(name, data_type, index=0):
     global symbols_table_index
-    symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index), index)
+    if (data_type == 'int_array' or data_type == 'double_array'):
+        symbols_table[name] = symbols_table_structure(name, data_type, '*' + str(symbols_table_index), index)
+    else:
+        symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index), index)
     symbols_table_index += 1
 
 def p_action_var_value(p):
@@ -480,6 +502,8 @@ def p_action_console_write(p):
     for var in write_vars:
         if var[0] == "'":
             cout = var.replace("'", "") + ' ' + cout
+        elif var.find('[') > 0:
+            cout = '*' + var + str(operands_stack.pop()) + ']' + ' ' + cout
         else:
             cout = '#' + var + ' ' + cout
     write_vars = []
@@ -493,6 +517,24 @@ def p_action_console_read(p):
     quadruplets.append('consoleRead ' + str(cin))
     quadruplet_index += 1
 
+def p_action_create_array(p):
+    "ACTION_CREATE_ARRAY :"
+    array_name = p[-3]
+    dimention = p[-1]
+    array_type = 'int_array' if p[-4] == 'int' else 'double_array'
+    for i in range (dimention):
+        add_symbol(array_name + '_' + str(i), array_type)
+
+def p_action_generate_array_quadruplet(p):
+    "ACTION_GENERATE_ARRAY_QUADRUPLET :"
+    global quadruplet_index
+    operator = p[-2]
+    operand = p[-6]
+    value = operands_stack.pop()
+    variable_address = '*' + operand + '_' + str(operands_stack.pop())
+    quadruplets.append(str(operator) + ' ' + str(value) + ' ' + str(variable_address))
+    quadruplet_index += 1
+    
 def fill_jump(empty_jump_quadruplet_index, goto_index):
     quadruplets[empty_jump_quadruplet_index] = quadruplets[empty_jump_quadruplet_index] + str(goto_index)
 

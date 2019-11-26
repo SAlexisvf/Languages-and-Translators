@@ -1,20 +1,16 @@
-int a, b, c;
+int a[10];
+double b[5];
+int i;
 
 main (){
-	a = 10;
-	b = 5;
+    for (i = 0; i < 10;i++){
+        a[i] = i * 2;
+    }
+    i = 0;
+    while (i < 10){
+        consoleWrite(a[i]);
+        i = i + 1;
+    }
+    consoleWrite(a[1+3]);
 
-    if (a > 20) {
-        if (b < 5) {
-            a = 20;
-        }
-        else {
-            c = 5;
-        }
-    }
-    elif (a < 20) {
-        a = 10 * 10;
-    }
-    
-    c = c + 20;
 }

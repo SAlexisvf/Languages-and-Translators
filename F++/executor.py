@@ -5,7 +5,7 @@ from common import symbols_table_structure
 functions_stack = []
 
 def execute(quadruplets, symbols_table, temporal_variables):
-    # print_quadruplets_and_memory(quadruplets, symbols_table)
+    print_quadruplets_and_memory(quadruplets, symbols_table)
     for i in range (temporal_variables):
         symbols_table['temp_' + str(i)] = symbols_table_structure('temp_' + str(i), 'temp', '#' + str(i), 0)
     
@@ -21,6 +21,20 @@ def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_tab
                     print(symbols_table[data[1:]].value, end=' ')
                 else:
                     raise Exception (f'ConsoleWrite Error! variable {data[1:]} is not defined')
+            elif data[0] == '*':
+                open_bracket = data[1:].find('[')
+                close_bracket = data[1:].find(']')
+                index = data[1:][open_bracket+1:close_bracket]
+
+                if '#' in index:
+                    array_var = data[1:][:open_bracket]+ '_' + str(symbols_table[get_name_with_address(index, symbols_table)].value)
+                else:
+                    array_var = data[1:][:open_bracket]+'_'+data[1:][open_bracket+1:close_bracket]
+
+                if array_var in symbols_table:
+                    print(symbols_table[array_var].value, end=' ')
+                else:
+                    raise Exception (f'ConsoleWrite Error! index {index} out of range')
             elif data == '%n':
                 print()
             else:
@@ -38,11 +52,15 @@ def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_tab
     
     elif single_quadruplet[0] == '=':
         if single_quadruplet[1][0] == '#':
+            if single_quadruplet[2][0] == '*':
+                single_quadruplet[2] = symbols_table[get_name_of_array(single_quadruplet[2][1:], symbols_table)].address
             single_quadruplet[1] = symbols_table[get_name_with_address(single_quadruplet[1], symbols_table)].value
             symbols_table[get_name_with_address(single_quadruplet[2], symbols_table)].value = single_quadruplet[1]
         else:
+            if single_quadruplet[2][0] == '*':
+                single_quadruplet[2] = symbols_table[get_name_of_array(single_quadruplet[2][1:], symbols_table)].address
             symbols_table[get_name_with_address(single_quadruplet[2], symbols_table)].value = ast.literal_eval(single_quadruplet[1])
-     
+   
     elif single_quadruplet[0] == 'gotoF':
         if not symbols_table[get_name_with_address(single_quadruplet[1], symbols_table)].value:
             return ast.literal_eval(single_quadruplet[2])
@@ -67,6 +85,12 @@ def get_name_with_address(address, symbols_table):
     for key in symbols_table:
         if symbols_table[key].address == address:
             return key
+
+def get_name_of_array(array, symbols_table):
+    if (array[2] == '#'):
+        return array[:2] + str(symbols_table[get_name_with_address(array[2:], symbols_table)].value)
+    else:
+        return array
 
 def arithmetic_operation(operator, operand_1, operand_2, symbols_table):
     if operand_1[0] == '#':
