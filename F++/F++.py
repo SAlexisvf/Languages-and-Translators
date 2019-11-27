@@ -264,7 +264,7 @@ def p_mainProgram(p):
 def p_subroutine(p):
     '''
     subroutine : consoleWrite openParenthesis cout ACTION_CONSOLE_WRITE closeParenthesis semicolon subroutine
-    | consoleRead openParenthesis id ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
+    | consoleRead openParenthesis cin ACTION_CONSOLE_READ closeParenthesis semicolon subroutine
     | if openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_NEW_IF ACTION_QUADRUPLET_EMPTY_JUMP_END_IF elseStatement ACTION_FILL_JUMP_END_IF subroutine
     | while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP openBrace subroutine closeBrace ACTION_WHILE_GOTO subroutine
     | do ACTION_DO_WHILE_INDEX openBrace subroutine closeBrace while openParenthesis statement closeParenthesis ACTION_QUADRUPLET_EMPTY_JUMP_DO_WHILE semicolon subroutine
@@ -307,9 +307,22 @@ def p_cout(p):
     '''
     cout : id multipleCout
     | string multipleCout
+    | id openBracket arithmeticExpression closeBracket multipleCout
+    | id openBracket arithmeticExpression closeBracket openBracket arithmeticExpression closeBracket multipleCout
+    |
+    '''
+    if len(p) == 6:
+        write_vars.append('*'+p[1]+p[2])
+    elif len(p) == 9:
+        write_vars.append('**'+p[1])
+    else:
+        write_vars.append(p[1])
+
+def p_cin(p):
+    '''
+    cin : id
     | id openBracket arithmeticExpression closeBracket
     | id openBracket arithmeticExpression closeBracket openBracket arithmeticExpression closeBracket
-    |
     '''
     if len(p) == 5:
         write_vars.append('*'+p[1]+p[2])
@@ -322,9 +335,15 @@ def p_multipleCout(p):
     '''
     multipleCout : comma id multipleCout
     | comma string multipleCout
+    | comma id openBracket arithmeticExpression closeBracket multipleCout
+    | comma id openBracket arithmeticExpression closeBracket openBracket arithmeticExpression closeBracket multipleCout
     |
     '''
-    if len(p) == 4:
+    if len(p) == 7:
+        write_vars.append('*'+p[2]+p[3])
+    elif len(p) == 10:
+        write_vars.append('**'+p[2])
+    elif len(p) > 1:
         write_vars.append(p[2])
         
 # Error rule for syntax errors
@@ -509,7 +528,13 @@ def p_action_console_write(p):
 def p_action_console_read(p):
     "ACTION_CONSOLE_READ :"
     global quadruplet_index
-    cin = p[-1]
+    cin = write_vars.pop()
+    if '**' in cin:
+        dimention_2 = operands_stack.pop()
+        dimention_1 = operands_stack.pop()
+        cin = cin + '[' + str(dimention_1) + ']' + '[' + str(dimention_2) + ']'
+    elif '[' in cin:
+        cin = cin + str(operands_stack.pop()) + ']'
     quadruplets.append('consoleRead ' + str(cin))
     quadruplet_index += 1
 

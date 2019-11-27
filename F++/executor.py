@@ -40,7 +40,19 @@ def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_tab
 
     elif single_quadruplet[0] == 'consoleRead':
         for data in single_quadruplet[1:]:
-            if data in symbols_table:
+            if '**' in data:
+                parsed_matrix = parse_matrix(data, symbols_table)
+                if parsed_matrix[0] in symbols_table:
+                    symbols_table[parsed_matrix[0]].value[parsed_matrix[1]][parsed_matrix[2]] = ast.literal_eval(input())
+                else:
+                    raise Exception (f'ConsoleWrite Error! variable {data[1:]} is not defined')
+            elif data[0] == '*':    
+                parsed_matrix = parse_matrix(data, symbols_table) 
+                if parsed_matrix[0] in symbols_table:
+                    symbols_table[parsed_matrix[0]].value[parsed_matrix[1]] = ast.literal_eval(input())
+                else:
+                    raise Exception (f'ConsoleWrite Error! variable {data[1:]} is not defined')
+            elif data in symbols_table:
                 symbols_table[data].value = ast.literal_eval(input())
             else:
                 raise Exception (f'ConsoleRead Error! variable {data} is not defined')
