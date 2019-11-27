@@ -271,6 +271,7 @@ def p_subroutine(p):
     | for openParenthesis id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon statement semicolon ACTION_QUADRUPLET_EMPTY_JUMP arithmeticExpression ACTION_FOR_INCREMENT closeParenthesis openBrace subroutine closeBrace ACTION_FOR_GOTO subroutine
     | id equal arithmeticExpression ACTION_GENERATE_QUADRUPLET semicolon subroutine
     | id openBracket arithmeticExpression closeBracket equal arithmeticExpression ACTION_GENERATE_ARRAY_QUADRUPLET semicolon subroutine
+    | id openBracket arithmeticExpression closeBracket openBracket arithmeticExpression closeBracket equal arithmeticExpression ACTION_GENERATE_BI_ARRAY_QUADRUPLET semicolon subroutine
     | unaryExpression semicolon subroutine
     | call id ACTION_GOTO_FUNCTION openParenthesis closeParenthesis semicolon subroutine
     |
@@ -307,9 +308,13 @@ def p_cout(p):
     cout : id multipleCout
     | string multipleCout
     | id openBracket arithmeticExpression closeBracket
+    | id openBracket arithmeticExpression closeBracket openBracket arithmeticExpression closeBracket
+    |
     '''
-    if len(p) > 3:
-        write_vars.append(p[1]+p[2])
+    if len(p) == 5:
+        write_vars.append('*'+p[1]+p[2])
+    elif len(p) == 8:
+        write_vars.append('**'+p[1])
     else:
         write_vars.append(p[1])
 
@@ -489,8 +494,12 @@ def p_action_console_write(p):
     for var in write_vars:
         if var[0] == "'":
             cout = var.replace("'", "") + ' ' + cout
-        elif var.find('[') > 0:
-            cout = '*' + var + str(operands_stack.pop()) + ']' + ' ' + cout
+        elif '**' in var:
+            dimention_2 = operands_stack.pop()
+            dimention_1 = operands_stack.pop()
+            cout = var + '[' + str(dimention_1) + ']' + '[' + str(dimention_2) + ']' + ' ' + cout
+        elif '[' in var:
+            cout = var + str(operands_stack.pop()) + ']' + ' ' + cout
         else:
             cout = '#' + var + ' ' + cout
     write_vars = []
@@ -526,6 +535,18 @@ def p_action_generate_array_quadruplet(p):
     operand = p[-6]
     value = operands_stack.pop()
     variable_address = '*' + operand + '_' + str(operands_stack.pop())
+    quadruplets.append(str(operator) + ' ' + str(value) + ' ' + str(variable_address))
+    quadruplet_index += 1
+
+def p_action_generate_bi_array_quadruplet(p):
+    "ACTION_GENERATE_BI_ARRAY_QUADRUPLET :"
+    global quadruplet_index
+    operator = p[-2]
+    operand = p[-9]
+    value = operands_stack.pop()
+    dimention_2 = str(operands_stack.pop())
+    dimention_1 = str(operands_stack.pop())
+    variable_address = '**' + operand + '_' + dimention_1 + '_' + dimention_2
     quadruplets.append(str(operator) + ' ' + str(value) + ' ' + str(variable_address))
     quadruplet_index += 1
     
