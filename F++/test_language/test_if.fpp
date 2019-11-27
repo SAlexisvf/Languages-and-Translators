@@ -1,5 +1,6 @@
 int a[10];
 double b[5];
+int x[2][5];
 int i;
 
 main (){
@@ -11,6 +12,5 @@ main (){
         consoleWrite(a[i]);
         i = i + 1;
     }
-    consoleWrite(a[1+3]);
 
 }

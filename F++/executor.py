@@ -5,9 +5,9 @@ from common import symbols_table_structure
 functions_stack = []
 
 def execute(quadruplets, symbols_table, temporal_variables):
-    print_quadruplets_and_memory(quadruplets, symbols_table)
+    # print_quadruplets_and_memory(quadruplets, symbols_table)
     for i in range (temporal_variables):
-        symbols_table['temp_' + str(i)] = symbols_table_structure('temp_' + str(i), 'temp', '#' + str(i), 0, 0)
+        symbols_table['temp_' + str(i)] = symbols_table_structure('temp_' + str(i), 'temp', '#' + str(i), 0, 0, 0)
     
     current_quadruplet = 1
     while current_quadruplet <= len(quadruplets):
@@ -21,19 +21,10 @@ def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_tab
                     print(symbols_table[data[1:]].value, end=' ')
                 else:
                     raise Exception (f'ConsoleWrite Error! variable {data[1:]} is not defined')
-            elif data[0] == '*':
-                open_bracket = data[1:].find('[')
-                close_bracket = data[1:].find(']')
-                index = data[1:][open_bracket+1:close_bracket]
-                array_var = data[1:][:open_bracket]
-
-                if '#' in index:
-                    index = symbols_table[get_name_with_address(index, symbols_table)].value
-                else:
-                    index = ast.literal_eval(index)
-
-                if array_var in symbols_table:
-                    print(symbols_table[array_var].value[index], end=' ')
+            elif data[0] == '*':    
+                parsed_matrix = parse_matrix(data[1:], symbols_table) 
+                if parsed_matrix[0] in symbols_table:
+                    print(symbols_table[parsed_matrix[0]].value[parsed_matrix[1]], end=' ')
                 else:
                     raise Exception (f'ConsoleWrite Error! variable {data[1:]} is not defined')
             elif data == '%n':
@@ -55,20 +46,14 @@ def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_tab
         if single_quadruplet[1][0] == '#':
             single_quadruplet[1] = symbols_table[get_name_with_address(single_quadruplet[1], symbols_table)].value
             if single_quadruplet[2][0] == '*':
-                if single_quadruplet[2].find('#') > 0:
-                    index = symbols_table[get_name_with_address(single_quadruplet[2][single_quadruplet[2].find('#'):], symbols_table)].value
-                else:
-                    index = int(single_quadruplet[2][single_quadruplet[2].find('_')+1:])
-                symbols_table[single_quadruplet[2][1:single_quadruplet[2].find('_')]].value[index] = single_quadruplet[1]
+                parsed_matrix = parse_matrix(single_quadruplet[2][1:], symbols_table)
+                symbols_table[parsed_matrix[0]].value[parsed_matrix[1]] = single_quadruplet[1]
             else:
                 symbols_table[get_name_with_address(single_quadruplet[2], symbols_table)].value = single_quadruplet[1]
         else:
             if single_quadruplet[2][0] == '*':
-                if single_quadruplet[2].find('#') > 0:
-                    index = symbols_table[get_name_with_address(single_quadruplet[2][single_quadruplet[2].find('#'):], symbols_table)].value
-                else:
-                    index = int(single_quadruplet[2][single_quadruplet[2].find('_')+1:])
-                symbols_table[single_quadruplet[2][1:single_quadruplet[2].find('_')]].value[index] = single_quadruplet[1]
+                parsed_matrix = parse_matrix(single_quadruplet[2][1:], symbols_table)
+                symbols_table[parsed_matrix[0]].value[parsed_matrix[1]] = single_quadruplet[1]
             else:
                 symbols_table[get_name_with_address(single_quadruplet[2], symbols_table)].value = ast.literal_eval(single_quadruplet[1])
         
@@ -102,6 +87,28 @@ def get_name_of_array(array, symbols_table):
         return array[:2] + str(symbols_table[get_name_with_address(array[2:], symbols_table)].value)
     else:
         return array
+
+def parse_matrix(matrix, symbols_table):
+    parsed_matrix = []
+    if '[' in matrix:
+        open_bracket = matrix.find('[')
+        close_bracket = matrix.find(']')
+        index_1 = matrix[open_bracket+1:close_bracket]
+        var = matrix[:open_bracket]
+
+        if '#' in index_1:
+            index_1 = symbols_table[get_name_with_address(index_1, symbols_table)].value
+        else:
+            index_1 = ast.literal_eval(index_1)
+    else:
+        var = matrix[:matrix.find('_')]
+        if '#' in matrix:
+            index_1 = symbols_table[get_name_with_address(matrix[matrix.find('#'):], symbols_table)].value
+        else:
+            index_1 = int(matrix[matrix.find('_')+1:])
+    parsed_matrix.append(var)
+    parsed_matrix.append(index_1)
+    return parsed_matrix
 
 def arithmetic_operation(operator, operand_1, operand_2, symbols_table):
     if operand_1[0] == '#':

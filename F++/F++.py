@@ -178,12 +178,18 @@ def p_program(p):
 def p_var(p):
     '''
     var : type varSequence semicolon var
-    | type id openBracket intValue ACTION_CREATE_ARRAY closeBracket semicolon var
+    | type id openBracket intValue ACTION_CREATE_ARRAY closeBracket bidimentionalArray semicolon var
     |
     '''
     if (len(p) == 5):
         for name in p[2]:
             add_symbol(name, p[1])
+
+def p_bidimentionalArray(p):
+    '''
+    bidimentionalArray : openBracket intValue ACTION_CREATE_BI_ARRAY closeBracket
+    |
+    '''
 
 def p_varSequence(p):
     '''
@@ -320,12 +326,12 @@ def p_multipleCout(p):
 def p_error(p):
     raise Exception("Syntax error in input!")
 
-def add_symbol(name, data_type, index=0, dimention=0):
+def add_symbol(name, data_type, index=0, dimention_1=0, dimention_2=0):
     global symbols_table_index
     if (data_type == 'int_array' or data_type == 'double_array'):
-        symbols_table[name] = symbols_table_structure(name, data_type, '*' + str(symbols_table_index), index, dimention)
+        symbols_table[name] = symbols_table_structure(name, data_type, '*' + str(symbols_table_index), index, dimention_1, dimention_2)
     else:
-        symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index), index, dimention)
+        symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index), index, dimention_1, dimention_2)
     symbols_table_index += 1
 
 def p_action_var_value(p):
@@ -458,7 +464,7 @@ def p_action_add_function(p):
     "ACTION_ADD_FUNCTION :"
     global quadruplet_index, function_id
     function_id.append(p[-1])
-    add_symbol(function_id[-1], 'function', quadruplet_index)
+    add_symbol(function_id[-1], 'function', index=quadruplet_index)
     quadruplets.append('goto ')
     quadruplet_index += 1
 
@@ -503,7 +509,15 @@ def p_action_create_array(p):
     array_name = p[-3]
     dimention = p[-1]
     array_type = 'int_array' if p[-4] == 'int' else 'double_array'
-    add_symbol(array_name, array_type, dimention=dimention)
+    add_symbol(array_name, array_type, dimention_1=dimention)
+
+def p_action_create_bi_array(p):
+    "ACTION_CREATE_BI_ARRAY :"
+    array_name = p[-7]
+    dimention_1 = p[-5]
+    dimention_2 = p[-1]
+    array_type = 'int_array' if p[-8] == 'int' else 'double_array'
+    add_symbol(array_name, array_type, dimention_1=dimention_1, dimention_2=dimention_2)
 
 def p_action_generate_array_quadruplet(p):
     "ACTION_GENERATE_ARRAY_QUADRUPLET :"
