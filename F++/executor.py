@@ -61,7 +61,18 @@ def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_tab
         symbols_table[get_name_with_address(single_quadruplet[3], symbols_table)].value = arithmetic_operation(single_quadruplet[0], single_quadruplet[1], single_quadruplet[2], symbols_table)
     
     elif single_quadruplet[0] == '=':
-        if single_quadruplet[1][0] == '#':
+        if '**' in single_quadruplet[1]:
+            parsed_matrix = parse_matrix(single_quadruplet[1], symbols_table)
+            single_quadruplet[1] = symbols_table[parsed_matrix[0]].value[parsed_matrix[1]][parsed_matrix[2]]
+            if '**' in single_quadruplet[2]:
+                parsed_matrix = parse_matrix(single_quadruplet[2], symbols_table)
+                symbols_table[parsed_matrix[0]].value[parsed_matrix[1]][parsed_matrix[2]] = single_quadruplet[1]
+            elif '*' in single_quadruplet[2]:
+                parsed_matrix = parse_matrix(single_quadruplet[2], symbols_table)
+                symbols_table[parsed_matrix[0]].value[parsed_matrix[1]] = single_quadruplet[1]
+            else:
+                symbols_table[get_name_with_address(single_quadruplet[2], symbols_table)].value = single_quadruplet[1]
+        elif single_quadruplet[1][0] == '#':
             single_quadruplet[1] = symbols_table[get_name_with_address(single_quadruplet[1], symbols_table)].value
             if '**' in single_quadruplet[2]:
                 parsed_matrix = parse_matrix(single_quadruplet[2], symbols_table)
@@ -122,9 +133,9 @@ def parse_matrix(matrix, symbols_table):
                 parsed_matrix.append(ast.literal_eval(index_1))
                 parsed_matrix.append(ast.literal_eval(index_2))
         else:
-            parsed_matrix.append(matrix[:matrix.find('_')])
-            index_1 = matrix[matrix.find('_')+1:matrix.find('_', matrix.find('_')+1)]
-            index_2 = matrix[matrix.find('_', matrix.find('_')+1)+1:]
+            parsed_matrix.append(matrix[:matrix.find('-')])
+            index_1 = matrix[matrix.find('-')+1:matrix.find('-', matrix.find('-')+1)]
+            index_2 = matrix[matrix.find('-', matrix.find('-')+1)+1:]
             if '#' in index_1:
                 parsed_matrix.append(symbols_table[get_name_with_address(index_1, symbols_table)].value)
             if '#' in index_2:
@@ -145,22 +156,34 @@ def parse_matrix(matrix, symbols_table):
             else:
                 parsed_matrix.append(ast.literal_eval(index_1))
         else:
-            parsed_matrix.append(matrix[:matrix.find('_')])
+            parsed_matrix.append(matrix[:matrix.find('-')])
             if '#' in matrix:
                 parsed_matrix.append(symbols_table[get_name_with_address(matrix[matrix.find('#'):], symbols_table)].value)
             else:
-                parsed_matrix.append(int(matrix[matrix.find('_')+1:]))
+                parsed_matrix.append(int(matrix[matrix.find('-')+1:]))
 
     return parsed_matrix
 
 def arithmetic_operation(operator, operand_1, operand_2, symbols_table):
     if operand_1[0] == '#':
         operand_1 = symbols_table[get_name_with_address(operand_1, symbols_table)].value
+    elif '**' in operand_1:
+        parsed_matrix = parse_matrix(operand_1, symbols_table)
+        operand_1 = symbols_table[parsed_matrix[0]].value[parsed_matrix[1]][parsed_matrix[2]]
+    elif '*' in operand_1:
+        parsed_matrix = parse_matrix(operand_1, symbols_table)
+        operand_1 = symbols_table[parsed_matrix[0]].value[parsed_matrix[1]]
     else:
         operand_1 = ast.literal_eval(operand_1)
 
     if operand_2[0] == '#':
         operand_2 = symbols_table[get_name_with_address(operand_2, symbols_table)].value
+    elif '**' in operand_2:
+        parsed_matrix = parse_matrix(operand_2, symbols_table)
+        operand_2 = symbols_table[parsed_matrix[0]].value[parsed_matrix[1]][parsed_matrix[2]]
+    elif '*' in operand_2:
+        parsed_matrix = parse_matrix(operand_2, symbols_table)
+        operand_2 = symbols_table[parsed_matrix[0]].value[parsed_matrix[1]]
     else:
         operand_2 = ast.literal_eval(operand_2)
     

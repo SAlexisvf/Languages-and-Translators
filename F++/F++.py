@@ -227,6 +227,7 @@ def p_val(p):
     val : value
     | unaryExpression
     | openParenthesis arithmeticExpression closeParenthesis
+    | id openBracket arithmeticExpression closeBracket openBracket arithmeticExpression closeBracket ACTION_GENERATE_BI_ARRAY_OPERAND
     '''
 
 def p_unaryExpression(p):
@@ -559,7 +560,7 @@ def p_action_generate_array_quadruplet(p):
     operator = p[-2]
     operand = p[-6]
     value = operands_stack.pop()
-    variable_address = '*' + operand + '_' + str(operands_stack.pop())
+    variable_address = '*' + operand + '-' + str(operands_stack.pop())
     quadruplets.append(str(operator) + ' ' + str(value) + ' ' + str(variable_address))
     quadruplet_index += 1
 
@@ -571,9 +572,16 @@ def p_action_generate_bi_array_quadruplet(p):
     value = operands_stack.pop()
     dimention_2 = str(operands_stack.pop())
     dimention_1 = str(operands_stack.pop())
-    variable_address = '**' + operand + '_' + dimention_1 + '_' + dimention_2
+    variable_address = '**' + operand + '-' + dimention_1 + '-' + dimention_2
     quadruplets.append(str(operator) + ' ' + str(value) + ' ' + str(variable_address))
     quadruplet_index += 1
+
+def p_action_generate_bi_array_operand(p):
+    "ACTION_GENERATE_BI_ARRAY_OPERAND :"
+    operand = p[-7]
+    dimention_2 = str(operands_stack.pop())
+    dimention_1 = str(operands_stack.pop())
+    operands_stack.append('**' + operand + '-' + dimention_1 + '-' + dimention_2)
     
 def fill_jump(empty_jump_quadruplet_index, goto_index):
     quadruplets[empty_jump_quadruplet_index] = quadruplets[empty_jump_quadruplet_index] + str(goto_index)
