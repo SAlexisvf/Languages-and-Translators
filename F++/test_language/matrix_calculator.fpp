@@ -1,6 +1,6 @@
-int mat_1[4][4];
-int mat_2[4][4];
-int res[4][4];
+int mat_1[5][5];
+int mat_2[5][5];
+int res[5][5];
 int dimention_1, dimention_2, dimention_3, dimention_4;
 int i, j, k;
 int option;

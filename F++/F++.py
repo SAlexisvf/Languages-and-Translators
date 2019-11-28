@@ -228,6 +228,7 @@ def p_val(p):
     | unaryExpression
     | openParenthesis arithmeticExpression closeParenthesis
     | id openBracket arithmeticExpression closeBracket openBracket arithmeticExpression closeBracket ACTION_GENERATE_BI_ARRAY_OPERAND
+    | id openBracket arithmeticExpression closeBracket ACTION_GENERATE_ARRAY_OPERAND
     '''
 
 def p_unaryExpression(p):
@@ -582,6 +583,12 @@ def p_action_generate_bi_array_operand(p):
     dimention_2 = str(operands_stack.pop())
     dimention_1 = str(operands_stack.pop())
     operands_stack.append('**' + operand + '-' + dimention_1 + '-' + dimention_2)
+
+def p_action_generate_array_operand(p):
+    "ACTION_GENERATE_ARRAY_OPERAND :"
+    operand = p[-4]
+    dimention = str(operands_stack.pop())
+    operands_stack.append('*' + operand + '-' + dimention)
     
 def fill_jump(empty_jump_quadruplet_index, goto_index):
     quadruplets[empty_jump_quadruplet_index] = quadruplets[empty_jump_quadruplet_index] + str(goto_index)

@@ -5,7 +5,7 @@ from common import symbols_table_structure
 functions_stack = []
 
 def execute(quadruplets, symbols_table, temporal_variables):
-    print_quadruplets_and_memory(quadruplets, symbols_table)
+    # print_quadruplets_and_memory(quadruplets, symbols_table)
     for i in range (temporal_variables):
         symbols_table['temp_' + str(i)] = symbols_table_structure('temp_' + str(i), 'temp', '#' + str(i), 0, 0, 0)
     
@@ -64,6 +64,17 @@ def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_tab
         if '**' in single_quadruplet[1]:
             parsed_matrix = parse_matrix(single_quadruplet[1], symbols_table)
             single_quadruplet[1] = symbols_table[parsed_matrix[0]].value[parsed_matrix[1]][parsed_matrix[2]]
+            if '**' in single_quadruplet[2]:
+                parsed_matrix = parse_matrix(single_quadruplet[2], symbols_table)
+                symbols_table[parsed_matrix[0]].value[parsed_matrix[1]][parsed_matrix[2]] = single_quadruplet[1]
+            elif '*' in single_quadruplet[2]:
+                parsed_matrix = parse_matrix(single_quadruplet[2], symbols_table)
+                symbols_table[parsed_matrix[0]].value[parsed_matrix[1]] = single_quadruplet[1]
+            else:
+                symbols_table[get_name_with_address(single_quadruplet[2], symbols_table)].value = single_quadruplet[1]
+        elif '*' in single_quadruplet[1]:
+            parsed_matrix = parse_matrix(single_quadruplet[1], symbols_table)
+            single_quadruplet[1] = symbols_table[parsed_matrix[0]].value[parsed_matrix[1]]
             if '**' in single_quadruplet[2]:
                 parsed_matrix = parse_matrix(single_quadruplet[2], symbols_table)
                 symbols_table[parsed_matrix[0]].value[parsed_matrix[1]][parsed_matrix[2]] = single_quadruplet[1]
