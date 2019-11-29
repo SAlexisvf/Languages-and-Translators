@@ -1,8 +1,8 @@
 # Languages and Translators
-___
+
 Programming language designed and implemented in Python using the PLY library.
 ## F++ language
-The language is based on C ++ and has some of its basic functionalities such as:
+The language is based on C++ and has some of its basic functionalities such as:
 * int and double variable types
 * arithmetic and boolean operations 
 * loops (while, do while, for)
@@ -16,7 +16,7 @@ The language is based on C ++ and has some of its basic functionalities such as:
 int mat[10];
 int dimention, i, j, temp, option;
 
-function fill_matrix(){
+function fill_mat(){
     for (i = 0; i < dimention; i++){
         consoleWrite('Value for vector[', i, ']: ','%n');
         consoleRead(mat[i]);
@@ -30,6 +30,7 @@ function print_mat(){
 }
 
 function sort_mat(){
+    # this function sorts a vector in ascending order
     for (i = 0; i < dimention; i++){
         for (j = i + 1; j < dimention; j++){
             if (mat[i] > mat[j]){

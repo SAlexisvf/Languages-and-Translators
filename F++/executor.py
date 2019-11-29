@@ -5,6 +5,9 @@ from common import symbols_table_structure
 functions_stack = []
 
 def execute(quadruplets, symbols_table, temporal_variables):
+    '''
+    This function executes the quadruplets generated from the lexer and parser
+    '''
     # print_quadruplets_and_memory(quadruplets, symbols_table)
     for i in range (temporal_variables):
         symbols_table['temp_' + str(i)] = symbols_table_structure('temp_' + str(i), 'temp', '#' + str(i), 0, 0, 0)
@@ -14,6 +17,9 @@ def execute(quadruplets, symbols_table, temporal_variables):
         current_quadruplet = execute_single_quadruplet(quadruplets[current_quadruplet-1].split(), current_quadruplet, symbols_table)
 
 def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_table):
+    '''
+    This function grabs a single quadruplet, executes it and return the next quadruplet to be executed
+    '''
     if single_quadruplet[0] == 'consoleWrite':
         for data in single_quadruplet[1:]:
             if data[0] == '#':
@@ -124,11 +130,22 @@ def execute_single_quadruplet(single_quadruplet, current_quadruplet, symbols_tab
     return current_quadruplet + 1
 
 def get_name_with_address(address, symbols_table):
+    '''
+    Returns the name of a variable from the symbols table
+    '''
     for key in symbols_table:
         if symbols_table[key].address == address:
             return key
 
 def parse_matrix(matrix, symbols_table):
+    '''
+    This function parses the quadruplet string containing a matrix and returns a list with the matrix info
+    Example:
+
+    For a matrix mat[4][6] the quadruplet string will be: mat-4-6
+    The returning list will be: [mat, 4, 6]
+    parsed_matrix = [name of the matrix, dimention 1, dimention 2 (if its the case)]
+    '''
     parsed_matrix = []
     if '**' in matrix:
         matrix = matrix.replace('**','')
@@ -176,6 +193,9 @@ def parse_matrix(matrix, symbols_table):
     return parsed_matrix
 
 def arithmetic_operation(operator, operand_1, operand_2, symbols_table):
+    '''
+    Execute arithmetic and boolean operations
+    '''
     if operand_1[0] == '#':
         operand_1 = symbols_table[get_name_with_address(operand_1, symbols_table)].value
     elif '**' in operand_1:
@@ -224,6 +244,9 @@ def arithmetic_operation(operator, operand_1, operand_2, symbols_table):
         return operand_1 or operand_2
 
 def print_quadruplets_and_memory(quadruplets, symbols_table):
+    '''
+    Prints the program memory and the all quadruplets generated from the program
+    '''
     print('Memory:')
     for variable in symbols_table:
         print('variable name:', symbols_table[variable].id + '     ' + 'type:', symbols_table[variable].type + '    ' + 'address:', symbols_table[variable].address)

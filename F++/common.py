@@ -1,6 +1,9 @@
 import numpy as np
 
 class symbols_table_structure:
+    '''
+    Symbols table structure for the program variables
+    '''
     def __init__(self, variable_id, variable_type, variable_address, function_index, dimention_1, dimention_2):
         self.id = variable_id
         self.type = variable_type
