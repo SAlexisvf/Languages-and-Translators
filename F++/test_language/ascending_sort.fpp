@@ -3,7 +3,7 @@ int dimention, i, j, temp, option;
 
 function fill_mat(){
     for (i = 0; i < dimention; i++){
-        consoleWrite('Value for vector[', i, ']: ','%n');
+        consoleWrite('Value for vector[', i, ']: ');
         consoleRead(mat[i]);
     }
 }

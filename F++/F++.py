@@ -7,7 +7,34 @@ import numpy as np
 from common import symbols_table_structure
 from executor import execute
 
-# reserved keywords
+available_variables_in_memory = 50
+quadruplet_index = 1
+available = []
+symbols_table = {}
+operands_stack = []
+operators_stack = []
+types_stack = []
+jumps_stack = []
+ifs_stack = []
+quadruplets = []
+for_increment = []
+function_id = []
+write_vars = []
+
+def peek(list):
+    if len(list) == 0:
+        return None
+    return list[len(list) - 1]
+
+for i in range (available_variables_in_memory):
+    available.append('#' + str(i))
+
+symbols_table_index = available_variables_in_memory
+
+# ----------------------------------------------------------------------------
+# ---------------------------------LEXER--------------------------------------
+# ----------------------------------------------------------------------------
+
 reserved = {
     'int':'int',
     'double':'double',
@@ -144,36 +171,14 @@ def t_error(t):
 # Build the lexer
 lexer = lex.lex()
 
-available_variables_in_memory = 50
-quadruplet_index = 1
-available = []
-symbols_table = {}
-operands_stack = []
-operators_stack = []
-types_stack = []
-jumps_stack = []
-ifs_stack = []
-quadruplets = []
-for_increment = []
-function_id = []
-write_vars = []
-
-def peek(list):
-    if len(list) == 0:
-        return None
-    return list[len(list) - 1]
-
-for i in range (available_variables_in_memory):
-    available.append('#' + str(i))
-
-symbols_table_index = available_variables_in_memory
+# ----------------------------------------------------------------------------
+# ---------------------------------PARSER-------------------------------------
+# ----------------------------------------------------------------------------
 
 def p_program(p):
     '''
 	program : var func mainProgram
     '''
-    # print('Valid program!!!')
-    # print()
 	
 def p_var(p):
     '''
@@ -352,13 +357,9 @@ def p_multipleCout(p):
 def p_error(p):
     raise Exception("Syntax error in input!")
 
-def add_symbol(name, data_type, index=0, dimention_1=0, dimention_2=0):
-    global symbols_table_index
-    if (data_type == 'int_array' or data_type == 'double_array'):
-        symbols_table[name] = symbols_table_structure(name, data_type, '*' + str(symbols_table_index), index, dimention_1, dimention_2)
-    else:
-        symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index), index, dimention_1, dimention_2)
-    symbols_table_index += 1
+# ----------------------------------------------------------------------------
+# -----------------------------PARSER ACTIONS---------------------------------
+# ----------------------------------------------------------------------------
 
 def p_action_var_value(p):
     "ACTION_VAR_VALUE :"
@@ -592,6 +593,14 @@ def p_action_generate_array_operand(p):
     
 def fill_jump(empty_jump_quadruplet_index, goto_index):
     quadruplets[empty_jump_quadruplet_index] = quadruplets[empty_jump_quadruplet_index] + str(goto_index)
+
+def add_symbol(name, data_type, index=0, dimention_1=0, dimention_2=0):
+    global symbols_table_index
+    if (data_type == 'int_array' or data_type == 'double_array'):
+        symbols_table[name] = symbols_table_structure(name, data_type, '*' + str(symbols_table_index), index, dimention_1, dimention_2)
+    else:
+        symbols_table[name] = symbols_table_structure(name, data_type, '#' + str(symbols_table_index), index, dimention_1, dimention_2)
+    symbols_table_index += 1
 
 # Build the parser
 parser = yacc.yacc()
