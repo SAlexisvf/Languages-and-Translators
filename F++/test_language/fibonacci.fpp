@@ -1,5 +1,16 @@
 int i, num, a, b, c;
 
+function recurive(){
+    c = a + b;
+    a = b;
+    b = c;
+    consoleWrite(c);
+    i = i + 1;
+    if (num - 1 > i){
+        call recurive();
+    }
+}
+
 function fibonacci(){
     a = 1;
     b = 1;
@@ -14,12 +25,8 @@ function fibonacci(){
     }
     else {
         consoleWrite ('1', ' ', '1');
-        for(i = 1; num-1 > i; i++){
-            c = a + b;
-            a = b;
-            b = c;
-            consoleWrite(c);
-        }
+        i = 1;
+        call recurive();
     }
 }
 
