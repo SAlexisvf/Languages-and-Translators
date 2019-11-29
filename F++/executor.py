@@ -142,7 +142,7 @@ def parse_matrix(matrix, symbols_table):
     This function parses the quadruplet string containing a matrix and returns a list with the matrix info
     Example:
 
-    For a matrix mat[4][6] the quadruplet string will be: mat-4-6
+    For a matrix mat[4][6] the quadruplet string will be: **mat-4-6
     The returning list will be: [mat, 4, 6]
     parsed_matrix = [name of the matrix, dimention 1, dimention 2 (if its the case)]
     '''
