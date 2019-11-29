@@ -4,5 +4,8 @@ ply-3.11/
 
 lex.pyc
 parsetab.pyc
+parser.out
+parsertab.py
+parsetab.py
 
-*.DS_Store__pycache__
+*.DS_Store
